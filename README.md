@@ -23,6 +23,21 @@ Combines **long-term cloud PostgreSQL memory**, a **2-Factor Security Gate**, **
 
 ---
 
+## 📖 About Ved Chaos AI
+
+### 💡 The Vision & Genesis
+Most standard AI assistants are stateless, sanitized, and passive—they forget context between conversations, speak in generic corporate filler, and wait to be spoon-fed prompts rather than executing autonomously.
+
+**Ved Chaos AI** was engineered to break that paradigm. Born as a full-duplex agentic engine, it merges high-throughput developer autonomy with persistent cloud memory, offensive freelance capability, and an authentic, unfiltered persona.
+
+* 🧠 **Persistent Cognitive State**: Powered by cloud PostgreSQL with full-text search and vector retrieval, retaining user history, past code decisions, and ongoing client interactions permanently across sessions.
+* ⚡ **Ruthless Autonomous Action**: Operates a 24/7 background worker scanning zero-fee freelance bounties (Reddit / Twitter), drafting high-converting pitches, and defending client deliverable quality.
+* 🛡️ **Bi-Factor Identity Security**: Protected by an active 2FA gate (`VED_ACTIVATION_PHRASE` + `VED_SECURITY_PIN`). Unauthorized guests see a polite, neutral AI; verified owners unlock raw, unhinged dev mode and private internal tooling.
+* 📈 **Quant Trading & Risk Control**: Built-in algorithmic technical analysis (SMA crossovers, RSI 14 divergence, 1% portfolio risk limits) and paper trade execution.
+* 🔍 **Defensive Pentesting & Intelligence**: Live OWASP Top 10 code auditing, secret leak prevention, and real-time CVE and market spike research dossiers.
+
+---
+
 ## 🏛️ System Architecture
 
 ```mermaid
