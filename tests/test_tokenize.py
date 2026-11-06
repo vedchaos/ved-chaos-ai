@@ -57,6 +57,10 @@ def test_security_pin_access():
     assert auth_bad["authenticated"] is False
     assert auth_bad["access_level"] == "GUEST_NORMAL_MODE"
 
+    # Substring attack prevention (hmac.compare_digest exact match)
+    auth_substring = asyncio.run(verify_security_access(pin="prefix" + expected_pin + "suffix", activation_phrase=expected_phrase))
+    assert auth_substring["authenticated"] is False
+
     # System prompt owner unlock
     prompt_owner = asyncio.run(get_system_prompt(security_pin=expected_pin, activation_phrase=expected_phrase))
     assert "Ved Chaos" in prompt_owner
