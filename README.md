@@ -158,8 +158,9 @@ graph TD
 | `analyze_trading_technical_setup` | `ticker`, `prices`, `timeframe` | Computes SMA crossovers, RSI 14 momentum, and trend bias |
 | `calculate_position_risk_management` | `account_balance_usd`, `risk_percentage`, `entry_price`, `stop_loss_price`, `target_profit_price` | Calculates exact position sizing and 1% risk rule metrics |
 | `execute_paper_trade` | `action`, `ticker`, `quantity`, `price` | Simulates virtual trades on a $10,000 USD portfolio with zero risk |
-| `search_chat_history` | `query`, `limit` | Full-text search across past conversations via PostgreSQL FTS |
-| `save_chat_example` | `role`, `content`, `source_label` | Saves selected messages to the cloud memory store |
+| `search_chat_history` | `query`, `limit` | Full-text search across past conversations via PostgreSQL FTS (content_tsv) |
+| `hybrid_search_memory` | `query`, `embedding`, `limit` | Hybrid search combining FTS keyword rank and pgvector HNSW cosine distance |
+| `save_chat_example` | `role`, `content`, `source_label`, `embedding` | Stores snippet into cloud memory with SHA-256 deduplication & pgvector embeddings |
 | `analyze_word_frequency` | `limit` | Vocabulary frequency analysis across stored messages |
 | `delete_chat_example` | `example_id` | Deletes a stored conversation example by UUID |
 
