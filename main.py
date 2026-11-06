@@ -4,6 +4,8 @@ and cloud PostgreSQL memory store.
 """
 import ast
 import asyncio
+import hashlib
+import json
 import os
 import re
 from collections import Counter
@@ -235,60 +237,155 @@ async def get_system_prompt(
     return CORE_SYSTEM_PROMPT
 
 @mcp.tool()
-async def search_chat_history(query: str, limit: int = 5) -> list[dict[str, str]]:
-    """Search Ved's saved conversation memory and past examples using PostgreSQL full-text search."""
+async def search_chat_history(query: str, limit: int = 5) -> list[dict[str, Any]]:
+    """Search Ved's saved conversation memory and past examples using PostgreSQL full-text search (content_tsv)."""
     q = (query or "").strip()
     if len(q) < 2:
         return []
     limit = max(1, min(int(limit), MAX_SEARCH_RESULTS))
-    pool = await get_pool()
-    rows = await pool.fetch(
-        """
-        SELECT role, content, source_label, created_at
-        FROM chat_examples
-        WHERE user_id = $1
-          AND to_tsvector('simple', content) @@ plainto_tsquery('simple', $2)
-        ORDER BY created_at DESC
-        LIMIT $3
-        """,
-        USER_ID, q, limit,
-    )
-    return [
-        {
-            "role": r["role"],
-            "content": r["content"][:MAX_TEXT_CHARS],
-            "source_label": r["source_label"] or "",
-            "created_at": r["created_at"].isoformat(),
-        }
-        for r in rows
-    ]
+    if not DATABASE_URL:
+        return []
+    try:
+        pool = await get_pool()
+        rows = await pool.fetch(
+            """
+            SELECT role, content, source_label, created_at,
+                   ts_rank(content_tsv, plainto_tsquery('simple', $2)) AS rank
+            FROM chat_examples
+            WHERE user_id = $1
+              AND content_tsv @@ plainto_tsquery('simple', $2)
+            ORDER BY rank DESC, created_at DESC
+            LIMIT $3
+            """,
+            USER_ID,
+            q,
+            limit,
+        )
+        return [
+            {
+                "role": r["role"],
+                "content": r["content"][:MAX_TEXT_CHARS],
+                "source_label": r["source_label"] or "",
+                "created_at": r["created_at"].isoformat() if hasattr(r["created_at"], "isoformat") else str(r["created_at"]),
+                "fts_rank": float(r["rank"]) if r["rank"] is not None else 0.0,
+            }
+            for r in rows
+        ]
+    except Exception:
+        return []
+
+@mcp.tool()
+async def hybrid_search_memory(
+    query: str = "",
+    embedding: list[float] | None = None,
+    limit: int = 5,
+) -> list[dict[str, Any]]:
+    """Perform hybrid retrieval over memory combining keyword FTS rank and pgvector cosine similarity."""
+    limit = max(1, min(int(limit), MAX_SEARCH_RESULTS))
+    if not DATABASE_URL:
+        return []
+
+    q = (query or "").strip()
+    embedding_str = str(embedding) if embedding else None
+
+    try:
+        pool = await get_pool()
+        if embedding_str and q:
+            rows = await pool.fetch(
+                """
+                SELECT role, content, source_label, created_at,
+                       ts_rank(content_tsv, plainto_tsquery('simple', $2)) AS fts_score,
+                       (1 - (embedding <=> $3::vector)) AS vector_similarity
+                FROM chat_examples
+                WHERE user_id = $1
+                  AND (content_tsv @@ plainto_tsquery('simple', $2) OR embedding IS NOT NULL)
+                ORDER BY (COALESCE(ts_rank(content_tsv, plainto_tsquery('simple', $2)), 0) * 0.4 +
+                          COALESCE(1 - (embedding <=> $3::vector), 0) * 0.6) DESC
+                LIMIT $4
+                """,
+                USER_ID,
+                q,
+                embedding_str,
+                limit,
+            )
+        elif embedding_str:
+            rows = await pool.fetch(
+                """
+                SELECT role, content, source_label, created_at,
+                       0.0 AS fts_score,
+                       (1 - (embedding <=> $2::vector)) AS vector_similarity
+                FROM chat_examples
+                WHERE user_id = $1 AND embedding IS NOT NULL
+                ORDER BY embedding <=> $2::vector ASC
+                LIMIT $3
+                """,
+                USER_ID,
+                embedding_str,
+                limit,
+            )
+        else:
+            return await search_chat_history(query=q, limit=limit)
+
+        return [
+            {
+                "role": r["role"],
+                "content": r["content"][:MAX_TEXT_CHARS],
+                "source_label": r["source_label"] or "",
+                "created_at": r["created_at"].isoformat() if hasattr(r["created_at"], "isoformat") else str(r["created_at"]),
+                "vector_similarity": float(r["vector_similarity"]) if r.get("vector_similarity") is not None else 0.0,
+                "fts_score": float(r["fts_score"]) if r.get("fts_score") is not None else 0.0,
+            }
+            for r in rows
+        ]
+    except Exception:
+        return []
 
 @mcp.tool()
 async def save_chat_example(
     role: str,
     content: str,
     source_label: str = "manual",
+    embedding: list[float] | None = None,
 ) -> dict[str, Any]:
-    """Save an authentic conversation example into Ved's PostgreSQL memory layer."""
+    """Save an authentic conversation example into Ved's PostgreSQL memory layer with SHA-256 deduplication and pgvector support."""
     role = (role or "").strip().lower()
     content = (content or "").strip()
     source_label = (source_label or "manual").strip()[:100]
-    if role not in {"user", "assistant"}:
-        return {"ok": False, "error": "role must be 'user' or 'assistant'."}
+    if role not in {"user", "assistant", "system"}:
+        return {"ok": False, "error": "role must be 'user', 'assistant', or 'system'."}
     if not content:
         return {"ok": False, "error": "content cannot be empty."}
     if len(content) > MAX_TEXT_CHARS:
         return {"ok": False, "error": f"content exceeds {MAX_TEXT_CHARS} characters."}
-    pool = await get_pool()
-    row = await pool.fetchrow(
-        """
-        INSERT INTO chat_examples (user_id, role, content, source_label)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, created_at
-        """,
-        USER_ID, role, content, source_label,
-    )
-    return {"ok": True, "id": str(row["id"]), "created_at": row["created_at"].isoformat()}
+
+    content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    embedding_str = str(embedding) if embedding else None
+
+    if not DATABASE_URL:
+        return {"ok": False, "error": "DATABASE_URL not configured in environment"}
+
+    try:
+        pool = await get_pool()
+        row = await pool.fetchrow(
+            """
+            INSERT INTO chat_examples (user_id, role, content, content_hash, source_label, embedding)
+            VALUES ($1, $2, $3, $4, $5, $6::vector)
+            ON CONFLICT (user_id, content_hash) DO UPDATE
+            SET source_label = EXCLUDED.source_label
+            RETURNING id::text, created_at::text
+            """,
+            USER_ID,
+            role,
+            content,
+            content_hash,
+            source_label,
+            embedding_str,
+        )
+        if not row:
+            return {"ok": True, "deduplicated": True, "message": "Content deduplicated and updated"}
+        return {"ok": True, "id": row["id"], "created_at": row["created_at"]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 @mcp.tool()
 async def analyze_word_frequency(limit: int = 20) -> dict[str, Any]:
