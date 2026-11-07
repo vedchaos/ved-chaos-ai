@@ -18,7 +18,12 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    from pathlib import Path
+    _env_file = Path(__file__).resolve().parent / ".env"
+    if _env_file.exists():
+        load_dotenv(dotenv_path=_env_file)
+    else:
+        load_dotenv()
 except ImportError:
     pass
 
@@ -1364,7 +1369,18 @@ async def delete_chat_example(example_id: str) -> dict[str, Any]:
     return {"ok": deleted, "message": "Deleted." if deleted else "No matching example found."}
 
 def main() -> None:
-    mcp.run(transport="stdio")
+    import sys
+    transport = os.environ.get("MCP_TRANSPORT", "stdio").strip().lower()
+    if "--sse" in sys.argv:
+        transport = "sse"
+    elif "--http" in sys.argv:
+        transport = "streamable-http"
+    port = int(os.environ.get("PORT", "8000"))
+    if transport in ("sse", "streamable-http"):
+        mcp.settings.port = port
+        mcp.settings.host = "0.0.0.0"
+        logger.info(f"Starting FastMCP on {transport} at 0.0.0.0:{port}...")
+    mcp.run(transport=transport)
 
 if __name__ == "__main__":
     main()
