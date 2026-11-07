@@ -1750,6 +1750,319 @@ async def execute_paper_trade(
         "active_positions_count": len(PAPER_PORTFOLIO["open_positions"]),
     }
 
+# ==============================================================================
+# OS OPERATOR & VISION / SYSTEM AUTOMATION TOOLS
+# ==============================================================================
+
+@mcp.tool()
+async def capture_screen_snapshot(
+    save_path: str = "",
+) -> dict[str, Any]:
+    """Capture instantaneous primary monitor screenshot for vision AI analysis with graceful headless diagnostic fallback."""
+    import ctypes
+    user32 = ctypes.windll.user32
+    screen_w = user32.GetSystemMetrics(0)
+    screen_h = user32.GetSystemMetrics(1)
+
+    out_path = save_path.strip()
+    if not out_path:
+        import tempfile
+        out_path = os.path.join(tempfile.gettempdir(), f"ved_screen_{int(time.time())}.png")
+
+    captured_real = False
+    error_note = ""
+
+    try:
+        from PIL import ImageGrab
+        ctypes.windll.user32.SetProcessDPIAware()
+        img = ImageGrab.grab()
+        img.save(out_path, format="PNG")
+        captured_real = True
+    except Exception as exc1:
+        try:
+            import mss
+            with mss.MSS() as sct:
+                monitor = sct.monitors[1]
+                sct_img = sct.grab(monitor)
+                mss.tools.to_png(sct_img.rgb, sct_img.size, output=out_path)
+                captured_real = True
+        except Exception as exc2:
+            error_note = f"Headless session without active desktop context: {exc2 or exc1}"
+
+    file_size_kb = 0.0
+    if os.path.exists(out_path):
+        file_size_kb = round(os.path.getsize(out_path) / 1024.0, 2)
+
+    return {
+        "ok": True,
+        "captured": captured_real,
+        "resolution": f"{screen_w}x{screen_h}",
+        "width": screen_w,
+        "height": screen_h,
+        "file_path": out_path if captured_real else None,
+        "file_size_kb": file_size_kb if captured_real else 0.0,
+        "status": "Screen snapshot captured successfully" if captured_real else "Headless session fallback active",
+        "diagnostic_note": error_note if not captured_real else None,
+    }
+
+@mcp.tool()
+async def get_active_window_info() -> dict[str, Any]:
+    """Query currently focused application window title and geometry on Windows."""
+    import ctypes
+    import ctypes.wintypes
+    user32 = ctypes.windll.user32
+    hwnd = user32.GetForegroundWindow()
+    length = user32.GetWindowTextLengthW(hwnd)
+    buf = ctypes.create_unicode_buffer(length + 1)
+    user32.GetWindowTextW(hwnd, buf, length + 1)
+    title = buf.value or "No Active Window (Background Subshell)"
+
+    rect = ctypes.wintypes.RECT()
+    user32.GetWindowRect(hwnd, ctypes.byref(rect))
+
+    return {
+        "ok": True,
+        "window_handle": hwnd,
+        "window_title": title,
+        "bounds": {
+            "left": rect.left,
+            "top": rect.top,
+            "right": rect.right,
+            "bottom": rect.bottom,
+            "width": max(0, rect.right - rect.left),
+            "height": max(0, rect.bottom - rect.top),
+        },
+    }
+
+@mcp.tool()
+async def execute_system_command(
+    command: str,
+    timeout_seconds: int = 30,
+) -> dict[str, Any]:
+    """Execute PowerShell / Windows CMD terminal commands with strict safety filters against destructive operations."""
+    cmd = (command or "").strip()
+    if not cmd:
+        return {"ok": False, "error": "command cannot be empty"}
+
+    banned_destructive_patterns = [
+        r"(?i)\bformat\s+[a-z]:",
+        r"(?i)\bdiskpart\b",
+        r"(?i)\brmdir\s+/[sq]\s+[a-z]:\\",
+        r"(?i)\bdel\s+/[sq]\s+[a-z]:\\",
+        r"(?i)\bshutdown\s+/[sr]",
+        r"(?i):(){ :\|:& };:",
+    ]
+    for pattern in banned_destructive_patterns:
+        if re.search(pattern, cmd):
+            logger.warning(f"Blocked destructive command attempt: {cmd}")
+            return {
+                "ok": False,
+                "blocked_by_safety_policy": True,
+                "error": "Command blocked: contains destructive system-level operations violating safety policy.",
+            }
+
+    import subprocess
+    timeout = max(1, min(int(timeout_seconds), 120))
+    t0 = time.time()
+    try:
+        proc = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", cmd],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+        elapsed = round(time.time() - t0, 3)
+        return {
+            "ok": proc.returncode == 0,
+            "exit_code": proc.returncode,
+            "stdout": proc.stdout.strip(),
+            "stderr": proc.stderr.strip(),
+            "elapsed_seconds": elapsed,
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "ok": False,
+            "exit_code": -1,
+            "error": f"Command timed out after {timeout} seconds",
+        }
+    except Exception as exc:
+        return {"ok": False, "error": str(exc)}
+
+# ==============================================================================
+# DEFENSIVE THREAT & URL / VIRUS SHIELD TOOLS
+# ==============================================================================
+
+@mcp.tool()
+async def inspect_url_safety(
+    target_url: str,
+) -> dict[str, Any]:
+    """Inspect link safety: detects phishing typosquatting, direct IP loggers, suspicious TLDs, and executable download traps with pre-flight HEAD checks."""
+    raw_url = (target_url or "").strip()
+    if not raw_url:
+        return {"ok": False, "error": "target_url cannot be empty"}
+
+    import urllib.parse
+    parsed = urllib.parse.urlparse(raw_url)
+    if not parsed.scheme or parsed.scheme not in ("http", "https"):
+        return {
+            "ok": False,
+            "risk_score": 100,
+            "verdict": "CRITICAL RISK - NON-STANDARD SCHEME",
+            "findings": [f"Suspicious protocol scheme '{parsed.scheme}'. Only http/https permitted."],
+            "is_safe": False,
+        }
+
+    host = (parsed.hostname or "").lower()
+    path = (parsed.path or "").lower()
+    risk_score = 0
+    findings = []
+
+    # 1. Direct IP check
+    if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
+        risk_score += 40
+        findings.append("Direct IP address URL detected (frequent C2/phishing indicator)")
+
+    # 2. URL Shortener Detection
+    shorteners = {"bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "buff.ly", "cutt.ly"}
+    if host in shorteners:
+        risk_score += 25
+        findings.append(f"Shortened URL detected via {host} (masks final destination)")
+
+    # 3. Risky TLDs
+    risky_tlds = {".top", ".xyz", ".zip", ".mov", ".ru", ".su", ".fit", ".work", ".click", ".gq", ".cf", ".tk", ".ml"}
+    if any(host.endswith(tld) for tld in risky_tlds):
+        risk_score += 30
+        findings.append(f"High-abuse top-level domain (TLD) detected on {host}")
+
+    # 4. Brand Lookalike / Typosquatting (including leetspeak visual substitutions like 1->l, 0->o)
+    popular_brands = ["paypal", "google", "apple", "microsoft", "binance", "coinbase", "steam", "discord", "telegram", "metamask", "github"]
+    normalized_host = host.replace("1", "l").replace("0", "o").replace("5", "s").replace("vv", "w")
+    for brand in popular_brands:
+        if (brand in host or brand in normalized_host) and not (host == f"{brand}.com" or host.endswith(f".{brand}.com")):
+            risk_score += 50
+            findings.append(f"Possible typosquatting/lookalike phishing targeting '{brand}' ({host})")
+
+    # 5. Direct Executable Download Trap in URL
+    dangerous_exts = [".exe", ".scr", ".bat", ".cmd", ".vbs", ".ps1", ".msi", ".iso", ".dll", ".hta"]
+    if any(path.endswith(ext) for ext in dangerous_exts):
+        risk_score += 65
+        findings.append(f"URL directly downloads an executable binary payload ({path})")
+
+    # 6. Pre-flight Async HEAD Request
+    final_destination = raw_url
+    try:
+        async with httpx.AsyncClient(timeout=4.0, follow_redirects=True) as client:
+            head_resp = await client.head(raw_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VedThreatShield/1.0"})
+            final_destination = str(head_resp.url)
+            content_type = head_resp.headers.get("content-type", "").lower()
+            if any(m in content_type for m in ("application/x-dosexec", "application/x-msdos-program", "application/octet-stream")):
+                risk_score += 50
+                findings.append(f"Pre-flight header indicates executable payload MIME type: {content_type}")
+            if final_destination != raw_url:
+                findings.append(f"URL redirects to: {final_destination}")
+    except Exception as head_err:
+        findings.append(f"Pre-flight network probe note: {head_err}")
+
+    risk_score = min(100, risk_score)
+    is_safe = risk_score < 30
+    if risk_score >= 60:
+        verdict = "DANGEROUS / MALICIOUS LINK DETECTED - ABORT CLICK"
+    elif risk_score >= 30:
+        verdict = "SUSPICIOUS / PROCEED WITH EXTREME CAUTION"
+    else:
+        verdict = "SAFE - NO PROMINENT MALICIOUS INDICATORS"
+
+    return {
+        "ok": True,
+        "target_url": raw_url,
+        "final_destination": final_destination,
+        "is_safe": is_safe,
+        "risk_score": risk_score,
+        "verdict": verdict,
+        "findings": findings,
+        "recommendation": (
+            "Safe to proceed." if is_safe else "Do NOT click. URL exhibits prominent phishing or payload delivery characteristics."
+        ),
+    }
+
+@mcp.tool()
+async def inspect_file_threat(
+    file_path: str,
+) -> dict[str, Any]:
+    """Inspect local files for security threats: detects double extensions, masquerading executables (MZ header in documents), and computes SHA-256."""
+    p_str = (file_path or "").strip()
+    if not p_str:
+        return {"ok": False, "error": "file_path cannot be empty"}
+
+    p = Path(p_str)
+    if not p.exists() or not p.is_file():
+        return {"ok": False, "error": f"File does not exist: {p_str}"}
+
+    filename = p.name.lower()
+    risk_score = 0
+    findings = []
+
+    # 1. Double Extension Detection
+    parts = filename.split(".")
+    dangerous_exts = {"exe", "scr", "bat", "cmd", "vbs", "ps1", "msi", "iso", "dll", "hta", "wsf"}
+    if len(parts) > 2:
+        last_ext = parts[-1]
+        second_last_ext = parts[-2]
+        if last_ext in dangerous_exts and second_last_ext in {"pdf", "docx", "xlsx", "jpg", "png", "txt", "zip"}:
+            risk_score += 70
+            findings.append(f"Double extension malware indicator detected: '.{second_last_ext}.{last_ext}'")
+
+    # 2. Dangerous Standalone Extension
+    if p.suffix.lstrip(".").lower() in dangerous_exts:
+        risk_score += 35
+        findings.append(f"Executable file extension detected: '{p.suffix}'")
+
+    # 3. Read Magic Bytes & Compute Hash
+    content_hash = ""
+    is_pe_binary = False
+    file_size_kb = 0.0
+
+    try:
+        file_size_kb = round(p.stat().st_size / 1024.0, 2)
+        hasher = hashlib.sha256()
+        with open(p, "rb") as f:
+            header = f.read(1024)
+            f.seek(0)
+            while chunk := f.read(65536):
+                hasher.update(chunk)
+        content_hash = hasher.hexdigest()
+
+        if header.startswith(b"MZ"):
+            is_pe_binary = True
+            doc_exts = {".pdf", ".docx", ".xlsx", ".png", ".jpg", ".txt", ".csv"}
+            if p.suffix.lower() in doc_exts:
+                risk_score += 80
+                findings.append(f"CRITICAL: File disguised as '{p.suffix}' but contains Windows PE executable (MZ) binary header!")
+    except Exception as read_err:
+        findings.append(f"File inspection error: {read_err}")
+
+    risk_score = min(100, risk_score)
+    is_safe = risk_score < 30
+    verdict = (
+        "SAFE FILE"
+        if is_safe
+        else ("HIGH RISK / MALICIOUS THREAT DETECTED" if risk_score >= 60 else "SUSPICIOUS / ELEVATED RISK")
+    )
+
+    return {
+        "ok": True,
+        "file_name": p.name,
+        "file_path": str(p.resolve()),
+        "file_size_kb": file_size_kb,
+        "sha256": content_hash,
+        "is_safe": is_safe,
+        "is_executable": is_pe_binary,
+        "risk_score": risk_score,
+        "verdict": verdict,
+        "findings": findings,
+        "quarantine_recommended": not is_safe,
+    }
+
 def main() -> None:
     import sys
     transport = os.environ.get("MCP_TRANSPORT", "stdio").strip().lower()

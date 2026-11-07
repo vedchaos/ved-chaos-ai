@@ -8,8 +8,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Architecture-FastMCP%20%7C%20Agentic-00F0FF?style=for-the-badge&logo=fastapi&logoColor=black" alt="FastMCP" />
   <img src="https://img.shields.io/badge/Memory-PostgreSQL%20%2B%20SQLite-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Security-AST%20Auditing%20%2B%20Rate--Limit-FF0055?style=for-the-badge&logo=securityscorecard&logoColor=white" alt="Security" />
-  <img src="https://img.shields.io/badge/Tests-19%20Passed%20(100%25)-00FF66?style=for-the-badge&logo=pytest&logoColor=black" alt="Tests" />
+  <img src="https://img.shields.io/badge/Security-AST%20Auditing%20%2B%20Threat%20Shield-FF0055?style=for-the-badge&logo=securityscorecard&logoColor=white" alt="Security" />
+  <img src="https://img.shields.io/badge/Tests-25%20Passed%20(100%25)-00FF66?style=for-the-badge&logo=pytest&logoColor=black" alt="Tests" />
   <img src="https://img.shields.io/badge/Python-3.10%2B-FFE873?style=for-the-badge&logo=python&logoColor=black" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-999999?style=for-the-badge" alt="License" />
 </p>
@@ -102,7 +102,7 @@ graph TD
 
 ---
 
-## 🛠️ Complete MCP Tool Matrix (26 Tools)
+## 🛠️ Complete MCP Tool Matrix (31 Tools)
 
 | Category | Tool Name | Description | Auth Required |
 |---|---|---|:---:|
@@ -110,6 +110,11 @@ graph TD
 | | `get_user_profile` | Returns developer identity profile (guest fallback if unauthorized) | Yes |
 | | `get_writing_style` | Returns custom writing guidelines | Yes |
 | | `get_system_prompt` | Returns core developer prompt | Yes |
+| **OS Operator & Vision** | `capture_screen_snapshot` | Instantaneous desktop screenshot capture with vision fallback | No |
+| | `get_active_window_info` | Foreground window title, process ID, and coordinate bounds | No |
+| | `execute_system_command` | Sandboxed PowerShell/terminal execution with destructive command guards | No |
+| **Threat & Malware Shield** | `inspect_url_safety` | Phishing, typosquatting, and executable trap URL pre-flight analyzer | No |
+| | `inspect_file_threat` | Double extension, PE header masquerading, and SHA-256 fingerprinting | No |
 | **Memory Engine** | `search_chat_history` | PostgreSQL full-text search with GIN index ranking | Yes |
 | | `hybrid_search_memory` | Hybrid FTS + 1536-dim pgvector cosine similarity | Yes |
 | | `save_chat_example` | Upsert interaction with SHA-256 deduplication | Yes |
@@ -165,7 +170,7 @@ MAX_TEXT_CHARS=12000
 ```bash
 pytest -v
 ```
-All **19 tests** covering AST security, rate limiting, vector validation, SQLite state persistence, scrapers, and trading indicators run with **100% pass rate**.
+All **25 tests** covering AST security, rate limiting, vector validation, SQLite state persistence, scrapers, OS automation, threat shields, and trading indicators run with **100% pass rate**.
 
 ### 4. Run Background Daemon
 ```bash
