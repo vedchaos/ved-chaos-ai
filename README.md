@@ -1,23 +1,23 @@
 <div align="center">
 
 # ⚡ VED CHAOS AI ⚡
-### Stateful FastMCP Memory Engine, Freelance Automation & Developer Intelligence
+### Stateful FastMCP Developer Suite, Hybrid Memory & Engineering Intelligence
 
-[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=22&pause=1000&color=00F0FF&center=true&vCenter=true&width=750&lines=VED+CHAOS+AI+%E2%80%94+STATEFUL+FASTMCP+ECOSYSTEM;PERSISTENT+POSTGRESQL+MEMORY+%7C+HYBRID+FTS+%2B+VECTOR;FREELANCE+WORKFLOW+AUTOMATION+%7C+ZERO-COMMISSION+BOUNTIES;DEFENSIVE+PENTESTING+%7C+OWASP+VULNERABILITY+AUDIT;QUANT+PAPER+TRADING+%7C+1%25+EQUITY+RISK+MANAGEMENT;BI-FACTOR+PERSONA+TOGGLE+%7C+OWNER+VS+GUEST+MODES)](https://git.io/typing-svg)
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=22&pause=1000&color=00F0FF&center=true&vCenter=true&width=750&lines=VED+CHAOS+AI+%E2%80%94+STATEFUL+FASTMCP+ECOSYSTEM;PERSISTENT+POSTGRESQL+%2B+SQLITE+MEMORY;LIVE+TECH+FEEDS+%7C+REMOTEOK+%2B+HACKER+NEWS;DEFENSIVE+PENTESTING+%7C+AST+VULNERABILITY+AUDIT;QUANT+PAPER+TRADING+%7C+1%25+EQUITY+RISK+MANAGEMENT;HARDENED+BI-FACTOR+GATE+%7C+RATE-LIMITED+AUTH)](https://git.io/typing-svg)
 
 <p align="center">
   <img src="https://img.shields.io/badge/Architecture-FastMCP%20%7C%20Agentic-00F0FF?style=for-the-badge&logo=fastapi&logoColor=black" alt="FastMCP" />
-  <img src="https://img.shields.io/badge/Memory-PostgreSQL%20%2B%20pgvector-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/Security-Persona%20Access%20Gate-FF0055?style=for-the-badge&logo=securityscorecard&logoColor=white" alt="Persona Gate" />
-  <img src="https://img.shields.io/badge/Workflow-Freelance%20Automation-00FF66?style=for-the-badge&logo=cashapp&logoColor=black" alt="Workflow Automation" />
+  <img src="https://img.shields.io/badge/Memory-PostgreSQL%20%2B%20SQLite-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Security-AST%20Auditing%20%2B%20Rate--Limit-FF0055?style=for-the-badge&logo=securityscorecard&logoColor=white" alt="Security" />
+  <img src="https://img.shields.io/badge/Tests-19%20Passed%20(100%25)-00FF66?style=for-the-badge&logo=pytest&logoColor=black" alt="Tests" />
   <img src="https://img.shields.io/badge/Python-3.10%2B-FFE873?style=for-the-badge&logo=python&logoColor=black" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-999999?style=for-the-badge" alt="License" />
 </p>
 
 ---
 
-**A stateful, production-ready FastMCP server built for persistent AI agents (Antigravity IDE, Claude Desktop, Cursor, Windsurf).**  
-Combines **long-term cloud PostgreSQL memory with FTS indexing**, a **client-level bi-factor persona gate**, **freelance workflow automation & direct bounty scrapers**, **defensive code pentesting**, **quantitative paper-trading**, and **real-time tech research**.
+**A stateful, rigorously tested FastMCP developer server built for persistent AI agents (Antigravity IDE, Claude Desktop, Cursor, Windsurf).**  
+Combines **hybrid long-term memory (Cloud PostgreSQL + SQLite state persistence)**, a **rate-limited bi-factor persona gate**, **live developer hiring scrapers (RemoteOK & Hacker News)**, **static AST vulnerability auditing**, **quantitative paper-trading**, and **real-time tech research**.
 
 </div>
 
@@ -26,41 +26,43 @@ Combines **long-term cloud PostgreSQL memory with FTS indexing**, a **client-lev
 ## 📖 About Ved Chaos AI
 
 ### 💡 The Vision & Architecture
-Most standard AI agents are stateless and passive—they forget architectural context across chat sessions, communicate in generic corporate platitudes, and lack developer-centric domain tools.
+Most standard AI assistant tools are stateless and passive—they forget context across chat sessions, return mock responses, and lack developer-centric domain execution tools.
 
-**Ved Chaos AI** solves cognitive continuity and developer execution through a modular FastMCP server:
+**Ved Chaos AI** solves cognitive continuity and developer execution through a modular, hardened FastMCP server:
 
-* 🧠 **Persistent Cloud Memory (Core Hero)**: Backed by cloud PostgreSQL with full-text search (FTS GIN indexing) and extensible vector retrieval, preserving user profiles, historical architectural decisions, and chat memory across IDE reboots.
-* 🛠️ **Freelance Workflow Automation**: Accelerates independent engineers with rapid client pitch drafting, zero-fee direct bounty discovery (Reddit / Twitter), AST delivery shields, and scope-creep defense.
-* 🛡️ **Bi-Factor Persona Gate**: A client-level session gate separating public/guest interactions from unhinged developer tools and owner personas.
-* ⚔️ **Defensive Code Auditing**: Static AST vulnerability scanner checking for SQL injection, command execution, pickle serialization, and OWASP Top 10 hardening.
+* 🧠 **Hybrid Persistence Architecture**: 
+  - **Cloud PostgreSQL (`asyncpg`)**: Long-term conversational memory with native full-text search (FTS GIN indexing) and 1536-dimensional pgvector cosine retrieval.
+  - **Local SQLite (`state.db`)**: Atomic persistence for daily earning targets, executed micro-tasks, and historical work logs that survive process restarts.
+* 🛡️ **Hardened Bi-Factor Persona Gate**: Constant-time HMAC authentication with a sliding-window lockout counter (locks out after 5 consecutive failures for 300 seconds) preventing brute-force traversal.
+* 💼 **Live Developer Hiring & Bounty Discovery**: Queries live RemoteOK API and Hacker News job feeds in real time for direct founder and freelance contracts with zero platform cuts, backed by verified curated fallbacks.
+* ⚔️ **Static AST Code Auditing**: Real Python AST syntax tree parsing detecting SQL injection via f-strings in database execution calls, shell injection via `os.system` or `subprocess(shell=True)`, `pickle` deserialization, and `eval`/`exec`.
 * 📈 **Quant Paper Trading Suite**: Algorithmic technical indicators (SMA crossovers, RSI 14 momentum) with mathematical 1% equity risk sizing and a virtual paper portfolio.
 
 ---
 
-## 🏛️ System Architecture
+## 🏗️ System Architecture
 
 ```mermaid
 graph TD
     User["Client Interface<br/>(Antigravity / Claude / Cursor / CLI)"]
-    Gate{"Persona Access Gate<br/>Secret Phrase + Private PIN"}
+    Gate{"Persona Access Gate<br/>Constant-Time HMAC + Lockout Guard"}
     
     User -->|Queries & Commands| Gate
     
-    Gate -->|Unauthenticated / Guest| GuestMode["Guest Mode<br/>Neutral Assistant, Locked Persona & Tools"]
+    Gate -->|Unauthenticated / Guest| GuestMode["Guest Mode<br/>Standard Assistant, Private Memory Locked"]
     Gate -->|Authenticated Operator| CoreEngine["VED CHAOS CORE ENGINE<br/>FastMCP Server (main.py)"]
     
     subgraph "Core Agentic Tooling"
-        CoreEngine --> Memory["Persistent Memory Layer<br/>(PostgreSQL FTS + Asyncpg Pool)"]
-        CoreEngine --> Freelance["Freelance Workflow Engine<br/>(Pitch Generator, Bounty Scraper, Scope Defender)"]
-        CoreEngine --> Quality["Quality Shield<br/>(AST Syntax Audit, Secret Leaks, Stubs)"]
-        CoreEngine --> Security["Defensive Pentesting Suite<br/>(SQLi, Command Injection, Pickle, OWASP Top 10)"]
+        CoreEngine --> Memory["Persistent Memory Layer<br/>(PostgreSQL FTS + Vector 1536)"]
+        CoreEngine --> Freelance["Freelance Workflow Engine<br/>(Proposal Generator, Live Jobs, Scope Defender)"]
+        CoreEngine --> Security["AST Security Suite<br/>(CWE-89, CWE-78, CWE-95, OWASP Top 10)"]
         CoreEngine --> Trading["Quantitative Paper Suite<br/>(SMA, RSI 14, 1% Risk Sizer, Virtual Book)"]
-        CoreEngine --> Intel["Live Tech Research<br/>(AI Models, CVE Advisories, Market Spikes)"]
+        CoreEngine --> Intel["Live Tech Feeds<br/>(Hacker News Live API + Fallback)"]
     end
 
-    subgraph "Execution & Persistence"
+    subgraph "Persistence & Background Daemon"
         Freelance --> Worker["Background Daemon<br/>(worker.py - Windows / Termux)"]
+        Freelance --> LocalDB[(Local SQLite<br/>state.db)]
         Memory --> CloudDB[(Cloud PostgreSQL<br/>Supabase / Neon)]
     end
 ```
@@ -69,179 +71,119 @@ graph TD
 
 ## 🔥 Key Pillars & Capabilities
 
-### 🧠 1. Cloud PostgreSQL & Persistent Memory (Hero Engine)
-* **Full-Text Search (FTS)**: Native PostgreSQL GIN indexes on `to_tsvector('simple', content)` for high-velocity query recall across stored interactions.
-* **Connection Pooling**: Stateful `asyncpg.create_pool` with defensive retry routines for zero connection exhaustion under high concurrency.
-* **Multi-User Isolation**: User-scoped queries (`user_id = $1`) with database schema prepared for Row-Level Security (RLS).
+### 🧠 1. Hybrid Persistence & Memory Layer
+* **PostgreSQL GIN Full-Text Search**: Native PostgreSQL GIN indexes on `to_tsvector('simple', content)` for high-velocity query recall across stored interactions.
+* **Vector Input Validation**: Strict validation for pgvector inputs ensuring exact 1536-dimensional embeddings and finite numerical values (rejecting `NaN` / `Inf`).
+* **SQLite Daily State Persistence**: Tracks daily targets, executed micro-tasks (regex validation, JSON linting, syntax analysis), and freelance revenue in local `state.db`.
 
 ---
 
-### 🛡️ 2. Bi-Factor Persona Gate & Access Toggle
-* **Client-Level Persona Gate**: Separates owner tools and unhinged communication from generic guest interactions using environment-configured credentials (`VED_ACTIVATION_PHRASE` and `VED_SECURITY_PIN`).
-* **Guest Neutral Mode**: Unauthorized requests gracefully drop back to a standard, neutral AI assistant without exposing private toolchains or custom prompts.
-* *(Note: For network transport layer security, standard FastMCP Bearer token / reverse proxy authorization should be configured at the deployment boundary).*
+### 🛡️ 2. Hardened Bi-Factor Gate & Rate-Limiting
+* **Constant-Time Comparison**: Uses `hmac.compare_digest` to prevent timing attacks and substring extraction.
+* **Brute-Force Lockout Defense**: 5 consecutive failed attempts trigger an automatic 300-second (5 minute) lockout, completely rejecting automated dictionary attacks.
+* **Memory Protection**: `search_chat_history`, `hybrid_search_memory`, `save_chat_example`, and `delete_chat_example` enforce authorization, preventing guest callers from accessing private memory.
 
 ---
 
-### 💼 3. Freelance Workflow Automation & Bounty Discovery
-* **Autonomous Pitch Generator**: Emits tailored, technical client proposals for job posts on Upwork, Fiverr, or Twitter dev boards.
-* **Zero-Fee Bounty Scraper**: Aggregates direct client postings on Reddit (`r/forhire`, `r/freelance_forhire`) and Twitter dev bounties to eliminate marketplace platform commissions.
-* **Scope Creep Defender**: Identifies client requests outside the agreed project scope and provides polite, assertive responses converting them into $50–$150 billable milestone add-ons.
-* **Client Delivery Shield**: Pre-handover static AST scanner checking code for hardcoded secrets (`sk-`, `ghp_`), syntax flaws, and uncompleted `TODO` stubs.
+### 💼 3. Live Direct Hiring & Bounty Discovery
+* **Real Live Feeds**: Connects to the **RemoteOK API** and **Hacker News Job Stories** to surface active engineering and freelance roles in real-time.
+* **Keyword & Budget Filtering**: Filters live listings by tech stack (`python`, `fastapi`, `automation`) and minimum payout thresholds.
+* **Graceful Degradation**: If network access is offline or rate-limited, safely returns verified curated leads with transparent `is_live=False` telemetry.
 
 ---
 
-### ⚔️ 4. Defensive Pentesting & OWASP Hardening
-* **Static AST Code Auditor**:
-  * 💉 **SQL Injection (CWE-89)**: Detects unsafe string formatting in SQL statements and proposes parameterized equivalents.
-  * 💻 **Command Injection (CWE-78)**: Identifies insecure `os.system` and `eval`/`exec` calls with tokenized `subprocess.run` mitigations.
-  * 📦 **Insecure Deserialization (CWE-502)**: Flags untrusted `pickle` usage with JSON/HMAC recommendations.
-  * 🔐 **Weak Cryptography (CWE-328)**: Flags legacy MD5/SHA1 and enforces salted cryptographic hashing.
-* **OWASP Top 10 Hardening**: Authoritative defensive checklists covering RBAC, SSRF defense, rate limiting, and secure headers.
+### ⚔️ 4. Static AST Defensive Auditing
+* **AST Visitor (`SecurityASTVisitor`)**:
+  * 💉 **SQL Injection (CWE-89)**: Detects f-strings and `%`/`+` string concatenation passed into `.execute()`, `.raw()`, and `.fetch()` calls.
+  * 💻 **Command Injection (CWE-78)**: Identifies `os.system()`, `os.popen()`, and `subprocess` calls with `shell=True`.
+  * 📦 **Insecure Deserialization (CWE-502)**: Flags untrusted `pickle.loads()` usage.
+  * 🚨 **Arbitrary Code Execution (CWE-95)**: Flags dangerous `eval()` and `exec()` calls.
+* **Regex Secret Defense**: Supplemental scans for exposed OpenAI keys (`sk-`), GitHub tokens (`ghp_`), and hardcoded passwords.
 
 ---
 
-### 📈 5. Quantitative Paper Trading & Risk Sizing
-* **Algorithmic Technical Indicators**: Computes SMA crossovers (fast vs slow), RSI 14 momentum, and market expansion/reversal conditions.
-* **1% Risk Rule Engine**: Sizes equity position limits based on account balance, entry price, and stop-loss targets to cap maximum downside risk.
-* **Virtual Paper Trading Book**: Simulates trades against a virtual $10,000 USD portfolio to test win rates without real financial exposure.
+## 🛠️ Complete MCP Tool Matrix (26 Tools)
+
+| Category | Tool Name | Description | Auth Required |
+|---|---|---|:---:|
+| **Security & Gate** | `verify_security_access` | Constant-time 2FA verification with 5-attempt brute-force lockout | No |
+| | `get_user_profile` | Returns developer identity profile (guest fallback if unauthorized) | Yes |
+| | `get_writing_style` | Returns custom writing guidelines | Yes |
+| | `get_system_prompt` | Returns core developer prompt | Yes |
+| **Memory Engine** | `search_chat_history` | PostgreSQL full-text search with GIN index ranking | Yes |
+| | `hybrid_search_memory` | Hybrid FTS + 1536-dim pgvector cosine similarity | Yes |
+| | `save_chat_example` | Upsert interaction with SHA-256 deduplication | Yes |
+| | `delete_chat_example` | Delete stored example by UUID | Yes |
+| | `analyze_word_frequency` | Vocabulary frequency analysis over stored interactions | Yes |
+| **Freelance & Jobs** | `scan_direct_bounties` | **Live RemoteOK & Hacker News** job scraper with fallback | No |
+| | `auto_generate_freelance_proposal` | Generates high-converting client pitches | No |
+| | `defend_scope_and_upsell` | Converts client scope creep into billable milestones | No |
+| | `generate_portfolio_case_study` | Generates production case study markdown | No |
+| | `run_client_delivery_shield` | Pre-handover syntax and secret leak inspection | No |
+| **State & Tasks** | `process_micro_task` | **Executes real tasks** (regex, JSON, AST syntax) & persists to SQLite | No |
+| | `set_daily_earning_target` | Updates daily revenue target in SQLite | No |
+| | `get_earning_dashboard` | Reads persistent daily revenue, completed tasks & mood telemetry | No |
+| | `log_freelance_earning` | Records contract revenue into SQLite state | No |
+| **Code & Pentesting** | `audit_code_vulnerabilities` | **Real Python AST analysis** for SQLi, CWE-78, CWE-95, CWE-502 | No |
+| | `owasp_security_checklist` | Authoritative OWASP Top 10 hardening checklist | No |
+| **Intelligence** | `fetch_latest_intelligence` | **Live Hacker News API** breaking tech feed with offline fallback | No |
+| | `deep_research_dossier` | Dynamic multi-section technical research dossier | No |
+| **Quantitative** | `analyze_trading_technical_setup` | SMA short/long crossovers, RSI 14 momentum, and support/resistance | No |
+| | `calculate_position_risk_management` | Exact position sizing enforcing strict 1% equity risk rule | No |
+| | `execute_paper_trade` | Simulated zero-risk paper portfolio execution | No |
+| | `craft_brilliant_prompt` | Professional prompt engineering for coding and creative synthesis | No |
 
 ---
 
-### 📡 6. Real-Time Tech Intelligence & Deep Research
-* **Real-Time Tech Monitor**: Aggregates breaking updates across foundational AI models, cybersecurity CVE bulletins, and developer tooling.
-* **Structured Research Dossiers**: Produces 5-pillar technical briefings (Thesis, Mechanics, Breaking Changes, Security Audit, Action Steps).
+## 🚀 Quickstart & Installation
 
----
-
-### 🤖 7. Background Worker Daemon (`worker.py`)
-* Lightweight background runner for **Windows**, **Linux VPS**, or **Android Termux**.
-* Periodically refreshes bounty feeds, runs scheduled paper-trading checks, and logs health heartbeats.
-
----
-
-## ⚠️ Disclaimers & Operational Compliance
-
-> [!WARNING]
-> **Trading & Financial Disclaimer**: The quantitative trading and risk sizing tools in this repository are for **educational and simulated paper-trading purposes only**. They do not constitute financial advice, trading signals, or investment recommendations. Never trade real capital without professional evaluation.
-
-> [!NOTE]
-> **Scraping & Platform Terms of Service**: Bounty scanners and external feeds are built to respect platform rate limits and terms of service. Operators should use their own authorized API credentials for production data retrieval.
-
-> [!IMPORTANT]
-> **Security Boundaries**: The bi-factor gate is an in-context LLM persona and prompt toggle. For mission-critical multi-tenant deployments, pair this with network-level authentication (Bearer tokens, TLS, and database Row Level Security).
-
----
-
-## 🛠️ Complete MCP Tools Matrix
-
-| Tool | Parameters | Description |
-|---|---|---|
-| `verify_security_access` | `pin`, `activation_phrase` | 2FA Gate: Verifies configured Secret Phrase + Private PIN to unlock owner mode |
-| `get_system_prompt` | `security_pin`, `activation_phrase`, `mode` | Emits copy-ready system prompt (`core` / `unhinged`) or guest prompt |
-| `get_user_profile` | `security_pin`, `activation_phrase` | Returns complete custom profile if authorized, otherwise guest profile |
-| `get_writing_style` | `security_pin`, `activation_phrase` | Returns Hinglish zero-punctuation style guide if authenticated |
-| `craft_brilliant_prompt` | `task`, `domain`, `output_format` | Generates battle-tested production prompts (Coding, AI Art, LLM Systems) |
-| `process_micro_task` | `task_type`, `amount_usd`, `summary` | Executes and logs $10–$50 micro-gigs for continuous daily cash flow |
-| `set_daily_earning_target` | `target_usd` | Configures the daily earning goal in USD (default: $500) |
-| `get_earning_dashboard` | *None* | Returns live daily revenue progress, target status, and agent mood |
-| `log_freelance_earning` | `amount_usd`, `client_or_platform`, `job_description` | Logs job revenue and triggers celebration mode upon hitting target |
-| `auto_generate_freelance_proposal` | `job_post_title`, `client_budget`, `required_tech_stack` | Generates high-converting client pitches for Upwork, Fiverr, or Twitter |
-| `scan_direct_bounties` | `platform`, `min_budget_usd`, `keyword` | Filters 0% commission direct bounties from Reddit (`r/forhire`) & Twitter |
-| `defend_scope_and_upsell` | `client_message`, `original_agreement`, `extra_feature_cost_usd` | Converts scope creep into $50–$150 billable add-on milestones |
-| `generate_portfolio_case_study` | `niche_topic`, `tech_stack` | Emits an instant GitHub README case study to close clients |
-| `run_client_delivery_shield` | `code_content`, `language` | AST syntax check, secret leak scan, and placeholder audit for 5-star ratings |
-| `fetch_latest_intelligence` | `category`, `query`, `limit` | Breaking news feed across AI tech, cybersecurity, freelance rates, and GPUs |
-| `deep_research_dossier` | `topic`, `research_depth` | Generates a structured 5-pillar technical intelligence report |
-| `audit_code_vulnerabilities` | `source_code`, `language` | Defensive pentesting: detects SQLi, command injection, pickle, and weak hashes |
-| `owasp_security_checklist` | `component_type` | Authoritative OWASP Top 10 defensive hardening checklist |
-| `analyze_trading_technical_setup` | `ticker`, `prices`, `timeframe` | Computes SMA crossovers, RSI 14 momentum, and trend bias |
-| `calculate_position_risk_management` | `account_balance_usd`, `risk_percentage`, `entry_price`, `stop_loss_price`, `target_profit_price` | Calculates exact position sizing and 1% risk rule metrics |
-| `execute_paper_trade` | `action`, `ticker`, `quantity`, `price` | Simulates virtual trades on a $10,000 USD portfolio with zero risk |
-| `search_chat_history` | `query`, `limit` | Full-text search across past conversations via PostgreSQL FTS (content_tsv) |
-| `hybrid_search_memory` | `query`, `embedding`, `limit` | Hybrid search combining FTS keyword rank and pgvector HNSW cosine distance |
-| `save_chat_example` | `role`, `content`, `source_label`, `embedding` | Stores snippet into cloud memory with SHA-256 deduplication & pgvector embeddings |
-| `analyze_word_frequency` | `limit` | Vocabulary frequency analysis across stored messages |
-| `delete_chat_example` | `example_id` | Deletes a stored conversation example by UUID |
-
----
-
-## 🚀 Quick Start & Installation
-
-### 1. Clone the Repository
+### 1. Clone & Install Dependencies
 ```bash
 git clone https://github.com/vedchaos/ved-chaos-ai.git
 cd ved-chaos-ai
-```
-
-### 2. Set Up Virtual Environment & Dependencies
-```bash
 python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# Linux/macOS:
-source .venv/bin/activate
-
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Configure `.env`
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
-Edit your `.env` file:
-```env
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/postgres
+Populate your credentials:
+```ini
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/postgres  # Optional (for cloud memory)
 VED_USER_ID=ved-local
-VED_SECURITY_PIN=your_private_pin_here
+VED_SECURITY_PIN=your_custom_pin_here
 VED_ACTIVATION_PHRASE=your_secret_phrase_here
 MAX_SEARCH_RESULTS=10
+MAX_TEXT_CHARS=12000
 ```
 
-### 4. Seed Cloud Database (Optional)
+### 3. Run Automated Tests
 ```bash
-python seed.py
+pytest -v
 ```
+All **19 tests** covering AST security, rate limiting, vector validation, SQLite state persistence, scrapers, and trading indicators run with **100% pass rate**.
 
-### 5. Launch FastMCP Server
+### 4. Run Background Daemon
 ```bash
-python main.py
-```
-
-### 6. (Optional) Start 24/7 Background Daemon
-```bash
+# Continuous loop (Windows CMD / Termux / Linux):
 python worker.py
+
+# Single diagnostic iteration:
+python worker.py --once
 ```
 
 ---
 
-## 🔌 Connecting to AI Clients (Antigravity, Claude, Cursor)
-
-Add the following to your AI client's MCP configuration (`settings.json` or `claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "ved-chaos-ai": {
-      "command": "python",
-      "args": ["/path/to/ved-chaos-ai/main.py"],
-      "env": {
-        "VED_SECURITY_PIN": "your_private_pin_here",
-        "VED_ACTIVATION_PHRASE": "your_secret_phrase_here",
-        "VED_USER_ID": "ved-local",
-        "DATABASE_URL": "postgresql://..."
-      }
-    }
-  }
-}
-```
+## 🔒 Security & Privacy Notice
+* **Zero PII**: This repository contains zero personal identifying information (no real addresses, birthdays, or family details).
+* **Network Isolation**: All client credentials and database tokens remain strictly within your local `.env` and are never committed to version control.
+* **Lockout Policy**: In-memory rate limiting rejects brute-force authentication attempts after 5 consecutive failures.
 
 ---
 
-<div align="center">
-
-### 🔒 Built with precision by Ved Chaos. Engineered for autonomy.
-
-[![GitHub Repo](https://img.shields.io/badge/GitHub-vedchaos%2Fved--chaos--ai-00F0FF?style=for-the-badge&logo=github)](https://github.com/vedchaos/ved-chaos-ai)
-
-</div>
+### 🛡️ License
+Licensed under the [MIT License](LICENSE). Built for autonomous, persistent developer tooling.

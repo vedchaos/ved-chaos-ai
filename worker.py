@@ -1,5 +1,7 @@
-"""24/7 Background Runner Daemon (Windows CMD / Android Termux Compatible).
-Monitors zero-commission bounties, tracks the daily $500 target, and prints live status telemetry.
+"""Ved Chaos AI - 24/7 Background Runner Daemon & Telemetry Engine.
+Monitors direct zero-commission engineering bounties, processes automated micro-tasks,
+tracks the daily target in persistent SQLite storage, and emits structured telemetry.
+Compatible with: Windows CMD/PowerShell, Linux VPS, and Termux on Android.
 """
 import asyncio
 import sys
@@ -7,55 +9,75 @@ import time
 
 try:
     from main import (
-        DAILY_EARNING_STATE,
         get_earning_dashboard,
         scan_direct_bounties,
         process_micro_task,
     )
 except ImportError:
-    print("[Error] Make sure to run this script from the project directory.")
+    print("[Error] Make sure to run this script from the project root directory.")
     sys.exit(1)
 
 POLL_INTERVAL_SECONDS = 30
 
-async def run_worker_loop():
-    print("=" * 60)
-    print("  VED CHAOS 24/7 FREELANCE DAEMON & BOUNTY SCANNER")
-    print(f"  Target: ${DAILY_EARNING_STATE['daily_target_usd']} USD / day | Engine: Active")
-    print("  Compatible with: Windows PC, Termux on Android, Linux VPS")
-    print("=" * 60)
+async def run_worker_cycle(iteration: int) -> dict[str, any]:
+    """Execute a single telemetry & scanning cycle."""
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"\n[{timestamp}] >>> Heartbeat Iteration #{iteration}")
 
+    # 1. Fetch live dashboard from persistent SQLite state
+    dash = await get_earning_dashboard()
+    print(f"Revenue Status: ${dash['current_earnings_usd']:.2f} / ${dash['daily_target_usd']:.2f} USD ({dash['progress_percentage']})")
+    print(f"Agent Mood: [{dash['mood_state']}] -> {dash['ved_reaction']}")
+
+    # 2. Scan active direct bounties (Live RemoteOK & HN with offline fallback)
+    bounties_report = await scan_direct_bounties(platform="all", min_budget_usd=50.0, keyword="python")
+    found_count = bounties_report["total_found"]
+    source_label = "LIVE" if bounties_report.get("is_live") else "FALLBACK CACHE"
+    print(f"Direct Bounties Active [{source_label}]: {found_count} leads discovered via {bounties_report.get('source')}")
+
+    for b in bounties_report["bounties"][:3]:
+        budget = b.get("budget_usd", 0)
+        title = b.get("title", "")[:60]
+        src = b.get("source", "Direct")
+        print(f"  - [{src}] ${budget:.0f} USD: {title}...")
+
+    # 3. Check celebration milestone
+    if dash["target_achieved"]:
+        print("\n" + "*" * 55)
+        print("  🎉 DAILY TARGET REACHED! CELEBRATION ACTIVE! 🎉")
+        print("  Reaction:", dash["ved_reaction"])
+        print("*" * 55)
+
+    return {
+        "iteration": iteration,
+        "revenue_usd": dash["current_earnings_usd"],
+        "target_usd": dash["daily_target_usd"],
+        "bounties_found": found_count,
+        "target_achieved": dash["target_achieved"],
+    }
+
+async def run_worker_loop():
+    print("=" * 65)
+    print("  VED CHAOS 24/7 FREELANCE DAEMON & LIVE BOUNTY SCANNER")
+    print("  Persistent Engine: SQLite (state.db) | Hybrid Live APIs")
+    print("  Compatible with: Windows PC, Termux on Android, Linux VPS")
+    print("=" * 65)
+
+    run_once = "--once" in sys.argv
     iteration = 0
     try:
         while True:
             iteration += 1
-            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-            print(f"\n[{timestamp}] >>> Heartbeat Iteration #{iteration}")
+            await run_worker_cycle(iteration)
 
-            # 1. Fetch live dashboard
-            dash = await get_earning_dashboard()
-            print(f"Revenue Status: ${dash['current_earnings_usd']} / ${dash['daily_target_usd']} USD ({dash['progress_percentage']})")
-            print(f"Agent Mood: [{dash['mood_state']}] -> {dash['ved_reaction']}")
+            if run_once:
+                print("\n[Worker] Single execution cycle complete (--once mode).")
+                break
 
-            # 2. Scan active direct bounties
-            bounties_report = await scan_direct_bounties(platform="all", min_budget_usd=50.0, keyword="python")
-            found_count = bounties_report["total_found"]
-            print(f"Direct Zero-Fee Bounties Active: {found_count} leads ready to pitch")
-            for b in bounties_report["bounties"][:2]:
-                print(f"  - [{b['source']}] ${b['budget_usd']} USD: {b['title'][:65]}...")
-
-            # 3. Check celebration condition
-            if dash["target_achieved"]:
-                print("\n" + "*" * 50)
-                print("  🎉 DAILY TARGET REACHED! CELEBRATION ACTIVE! 🎉")
-                print("  Reaction:", dash["ved_reaction"])
-                print("*" * 50)
-
-            print(f"Sleeping for {POLL_INTERVAL_SECONDS} seconds... (Press Ctrl+C to stop)")
+            print(f"\nSleeping for {POLL_INTERVAL_SECONDS} seconds... (Press Ctrl+C to stop)")
             await asyncio.sleep(POLL_INTERVAL_SECONDS)
     except KeyboardInterrupt:
-        print("\n[Worker] Gracefully shut down by user.")
+        print("\n[Worker] Gracefully shut down by operator.")
 
 if __name__ == "__main__":
     asyncio.run(run_worker_loop())
-
