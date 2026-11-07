@@ -26,14 +26,16 @@ Combines **hybrid long-term memory (Cloud PostgreSQL + SQLite state persistence)
 ## 📖 About Ved Chaos AI
 
 ### 💡 The Vision & Architecture
-Most standard AI assistant tools are stateless and passive—they forget context across chat sessions, return mock responses, and lack developer-centric domain execution tools.
+Most standard AI assistant tools are stateless, passive, and disconnected from the host machine—they forget context across chat sessions, return mock responses, lack vision awareness, and cannot safely interact with the local operating system.
 
-**Ved Chaos AI** solves cognitive continuity and developer execution through a modular, hardened FastMCP server:
+**Ved Chaos AI** solves cognitive continuity, safe local automation, and developer execution through a modular, hardened FastMCP server:
 
 * 🧠 **Hybrid Persistence Architecture**: 
   - **Cloud PostgreSQL (`asyncpg`)**: Long-term conversational memory with native full-text search (FTS GIN indexing) and 1536-dimensional pgvector cosine retrieval.
   - **Local SQLite (`state.db`)**: Atomic persistence for daily earning targets, executed micro-tasks, and historical work logs that survive process restarts.
 * 🛡️ **Hardened Bi-Factor Persona Gate**: Constant-time HMAC authentication with a sliding-window lockout counter (locks out after 5 consecutive failures for 300 seconds) preventing brute-force traversal.
+* 🖥️ **Autonomous OS Operator & Desktop Vision**: Instantaneous desktop screenshot capture (`Pillow`/`MSS`) for Vision AI models, active foreground window telemetry, and sandboxed PowerShell command execution with destructive command guards.
+* 🛡️ **Defensive Threat & Malware / Phishing Link Shield**: Pre-flight URL safety inspection, typosquatting & leetspeak detection (`paypa1`), executable double-extension detection (`invoice.pdf.exe`), and binary masquerading defense (`MZ` header checks).
 * 💼 **Live Developer Hiring & Bounty Discovery**: Queries live RemoteOK API and Hacker News job feeds in real time for direct founder and freelance contracts with zero platform cuts, backed by verified curated fallbacks.
 * ⚔️ **Static AST Code Auditing**: Real Python AST syntax tree parsing detecting SQL injection via f-strings in database execution calls, shell injection via `os.system` or `subprocess(shell=True)`, `pickle` deserialization, and `eval`/`exec`.
 * 📈 **Quant Paper Trading Suite**: Algorithmic technical indicators (SMA crossovers, RSI 14 momentum) with mathematical 1% equity risk sizing and a virtual paper portfolio.
@@ -55,12 +57,14 @@ graph TD
     subgraph "Core Agentic Tooling"
         CoreEngine --> Memory["Persistent Memory Layer<br/>(PostgreSQL FTS + Vector 1536)"]
         CoreEngine --> Freelance["Freelance Workflow Engine<br/>(Proposal Generator, Live Jobs, Scope Defender)"]
+        CoreEngine --> OSOperator["OS Operator & Desktop Vision<br/>(Screenshots, Window Info, PowerShell)"]
+        CoreEngine --> ThreatGuard["Threat & Malware Shield<br/>(URL Phishing, Double-Ext, MZ Header)"]
         CoreEngine --> Security["AST Security Suite<br/>(CWE-89, CWE-78, CWE-95, OWASP Top 10)"]
         CoreEngine --> Trading["Quantitative Paper Suite<br/>(SMA, RSI 14, 1% Risk Sizer, Virtual Book)"]
         CoreEngine --> Intel["Live Tech Feeds<br/>(Hacker News Live API + Fallback)"]
     end
 
-    subgraph "Persistence & Background Daemon"
+    subgraph "Persistence & Execution"
         Freelance --> Worker["Background Daemon<br/>(worker.py - Windows / Termux)"]
         Freelance --> LocalDB[(Local SQLite<br/>state.db)]
         Memory --> CloudDB[(Cloud PostgreSQL<br/>Supabase / Neon)]
@@ -99,6 +103,26 @@ graph TD
   * 📦 **Insecure Deserialization (CWE-502)**: Flags untrusted `pickle.loads()` usage.
   * 🚨 **Arbitrary Code Execution (CWE-95)**: Flags dangerous `eval()` and `exec()` calls.
 * **Regex Secret Defense**: Supplemental scans for exposed OpenAI keys (`sk-`), GitHub tokens (`ghp_`), and hardcoded passwords.
+
+---
+
+### 🖥️ 5. Autonomous OS Operator & Desktop Vision
+* **Vision Screen Capture (`capture_screen_snapshot`)**: Takes instantaneous primary monitor screenshots (Pillow/MSS) with automated fallback for headless environments, allowing multimodal Vision AI models to visually inspect screen coordinates, open dialogs, and UI elements.
+* **Foreground Window Telemetry (`get_active_window_info`)**: Queries Windows User32 APIs for the active application title, process handle, and bounding rectangle geometry.
+* **Sandboxed System Execution (`execute_system_command`)**: Runs PowerShell and CMD commands with configurable timeouts and strict security filters intercepting destructive commands (`format`, `diskpart`, recursive `del /s /q`).
+
+---
+
+### 🛡️ 6. Defensive Threat & Malware / Phishing Link Shield
+* **Pre-Flight URL Inspector (`inspect_url_safety`)**: Computes a dynamic risk score (0–100) evaluating brand typosquatting (including leetspeak visual substitutions like `1->l`, `0->o`), direct IP hosts, dangerous TLDs, and URL shorteners, reinforced by asynchronous HEAD redirect-chain analysis.
+* **Malware & Payload Scanner (`inspect_file_threat`)**: Detects double-extension attacks (`.pdf.exe`), standalone executable extensions, and inspects binary headers for Windows Portable Executable (`MZ`) signatures masquerading as non-executable documents.
+
+---
+
+### 📈 7. Quantitative Paper Trading Suite
+* **Algorithmic Technical Indicators**: Computes SMA short/long crossovers, RSI 14 momentum, and support/resistance boundaries via `analyze_trading_technical_setup`.
+* **Mathematical Risk Sizing**: Enforces strict 1% equity risk rules and calculates exact position units via `calculate_position_risk_management`.
+* **Zero-Risk Virtual Book**: Simulates trade execution and tracks live portfolio balances via `execute_paper_trade`.
 
 ---
 

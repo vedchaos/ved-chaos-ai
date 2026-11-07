@@ -28,3 +28,4 @@ This skill equips the agent with automated defensive inspection tools to analyze
 - **Risk Score < 30 (SAFE):** Proceed with normal processing.
 - **Risk Score 30 - 59 (SUSPICIOUS):** Caution user and require explicit confirmation.
 - **Risk Score >= 60 (MALICIOUS):** **ABORT ACTION IMMEDIATELY.** Do not click, do not download, and alert operator.
+

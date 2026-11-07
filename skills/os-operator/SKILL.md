@@ -22,3 +22,4 @@ This skill equips the agent with authorized, defensive operating system automati
 2. **Visual Verification**: Take a screen snapshot via `capture_screen_snapshot` if UI state needs to be confirmed.
 3. **Command Execution**: Execute required build/test/run commands using `execute_system_command`.
 4. **Post-execution Telemetry**: Verify output returncode and error output before continuing.
+

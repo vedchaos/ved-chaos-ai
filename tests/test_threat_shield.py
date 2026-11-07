@@ -53,3 +53,4 @@ def test_inspect_file_threat_detects_malicious_files():
         assert res_clean["is_safe"] is True
         assert res_clean["risk_score"] == 0
         assert res_clean["sha256"] != ""
+

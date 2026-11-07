@@ -41,3 +41,4 @@ def test_capture_screen_snapshot_fallback():
     assert "height" in res
     assert res["width"] > 0
     assert res["height"] > 0
+
