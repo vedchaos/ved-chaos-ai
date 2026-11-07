@@ -176,6 +176,28 @@ python worker.py
 python worker.py --once
 ```
 
+### 5. Client MCP Configuration
+To connect Ved Chaos AI to **Antigravity IDE**, **Claude Desktop**, or **Cursor**, add the following entry to your `mcp_config.json` or `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "ved-chaos-ai": {
+      "command": "python",
+      "args": [
+        "path/to/ved-chaos-ai/main.py"
+      ],
+      "env": {
+        "VED_SECURITY_PIN": "your_custom_pin_here",
+        "VED_ACTIVATION_PHRASE": "your_secret_phrase_here",
+        "VED_USER_ID": "ved-local",
+        "DATABASE_URL": ""
+      }
+    }
+  }
+}
+```
+
 ---
 
 ## 🔒 Security & Privacy Notice

@@ -35,3 +35,4 @@ def test_deep_research_dossier_structure():
     assert "EXECUTIVE INTELLIGENCE DOSSIER" in res["dossier"]
     assert "Technical Mechanisms & Architecture" in res["dossier"]
     assert "Threat Modeling & Vulnerability Surface" in res["dossier"]
+

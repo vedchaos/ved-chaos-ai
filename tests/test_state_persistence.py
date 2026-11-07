@@ -62,3 +62,4 @@ def test_sqlite_state_persistence_and_micro_tasks():
     assert dash["daily_target_usd"] == 650.0
     assert dash["current_earnings_usd"] >= 240.0
     assert len(dash["completed_jobs"]) >= 3
+

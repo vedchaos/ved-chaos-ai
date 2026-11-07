@@ -39,3 +39,4 @@ def test_auth_rate_limiting_and_lockout():
     # 5. Clean up lockout for subsequent tests
     main._failed_attempts = 0
     main._lockout_until = 0.0
+

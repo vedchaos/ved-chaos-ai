@@ -55,3 +55,4 @@ def safe_process_runner(filename: str):
     assert res["passed_audit"] is True
     assert res["security_grade"] == "A+ (SECURE)"
     assert res["vulnerabilities_found"] == 0
+

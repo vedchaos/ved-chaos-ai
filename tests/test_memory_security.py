@@ -65,3 +65,4 @@ def test_hybrid_vector_dimension_validation():
     ))
     assert len(res_nan) == 1
     assert "Invalid vector value at index 42" in res_nan[0]["error"]
+

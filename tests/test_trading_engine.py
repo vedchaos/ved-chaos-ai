@@ -46,3 +46,4 @@ def test_execute_paper_trade_execution():
     assert buy_res["virtual_balance_remaining_usd"] == initial_balance - 300.0
     assert buy_res["active_positions_count"] >= 1
     assert buy_res["trade_executed"]["ticker"] == "SOL/USDT"
+
