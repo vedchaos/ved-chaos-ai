@@ -14,6 +14,7 @@ import math
 import os
 import re
 import sqlite3
+import sys
 import time
 import uuid
 from collections import Counter
@@ -152,6 +153,17 @@ def init_state_db() -> None:
                 summary TEXT NOT NULL,
                 execution_result TEXT NOT NULL,
                 created_at TEXT NOT NULL
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS background_jobs (
+                id TEXT PRIMARY KEY,
+                job_name TEXT NOT NULL,
+                script_path TEXT NOT NULL,
+                pid INTEGER NOT NULL,
+                status TEXT NOT NULL,
+                started_at TEXT NOT NULL,
+                stopped_at TEXT
             )
         """)
         conn.commit()
@@ -1888,6 +1900,338 @@ async def execute_system_command(
     except Exception as exc:
         return {"ok": False, "error": str(exc)}
 
+@mcp.tool()
+async def inspect_system_telemetry() -> dict[str, Any]:
+    """Inspect real-time Windows host system metrics: CPU load, core counts, RAM utilization, Disk storage, and top resource-consuming processes."""
+    import psutil
+
+    try:
+        cpu_usage = psutil.cpu_percent(interval=0.1)
+        logical_cores = psutil.cpu_count(logical=True)
+        physical_cores = psutil.cpu_count(logical=False) or logical_cores
+
+        vm = psutil.virtual_memory()
+        ram_total_gb = round(vm.total / (1024 ** 3), 2)
+        ram_used_gb = round(vm.used / (1024 ** 3), 2)
+        ram_free_gb = round(vm.available / (1024 ** 3), 2)
+        ram_percent = vm.percent
+
+        system_drive = os.environ.get("SystemDrive", "C:") + "\\"
+        disk = psutil.disk_usage(system_drive)
+        disk_total_gb = round(disk.total / (1024 ** 3), 2)
+        disk_used_gb = round(disk.used / (1024 ** 3), 2)
+        disk_free_gb = round(disk.free / (1024 ** 3), 2)
+        disk_percent = disk.percent
+
+        processes = []
+        for p in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent']):
+            try:
+                p_info = p.info
+                processes.append({
+                    "pid": p_info['pid'],
+                    "name": p_info['name'] or "unknown",
+                    "cpu_percent": p_info.get('cpu_percent') or 0.0,
+                    "memory_percent": round(p_info.get('memory_percent') or 0.0, 2),
+                })
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
+
+        top_by_memory = sorted(processes, key=lambda x: x["memory_percent"], reverse=True)[:5]
+        top_by_cpu = sorted(processes, key=lambda x: x["cpu_percent"], reverse=True)[:5]
+
+        return {
+            "ok": True,
+            "platform": sys.platform,
+            "cpu": {
+                "usage_percent": cpu_usage,
+                "logical_cores": logical_cores,
+                "physical_cores": physical_cores,
+            },
+            "memory": {
+                "total_gb": ram_total_gb,
+                "used_gb": ram_used_gb,
+                "free_gb": ram_free_gb,
+                "usage_percent": ram_percent,
+            },
+            "disk": {
+                "drive": system_drive,
+                "total_gb": disk_total_gb,
+                "used_gb": disk_used_gb,
+                "free_gb": disk_free_gb,
+                "usage_percent": disk_percent,
+            },
+            "top_processes_by_memory": top_by_memory,
+            "top_processes_by_cpu": top_by_cpu,
+        }
+    except Exception as exc:
+        return {"ok": False, "error": f"Failed to inspect telemetry: {exc}"}
+
+@mcp.tool()
+async def manage_background_job(
+    action: str,
+    job_name: str,
+    script_path: str = "",
+) -> dict[str, Any]:
+    """Start, stop, check status, or list detached background daemon jobs (e.g., worker.py) persisted in SQLite."""
+    act = (action or "").strip().lower()
+    name = (job_name or "").strip()
+    if not act:
+        return {"ok": False, "error": "action is required ('start', 'stop', 'status', 'list')"}
+
+    init_state_db()
+    import psutil
+
+    if act == "list":
+        with sqlite3.connect(STATE_DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute("SELECT * FROM background_jobs ORDER BY started_at DESC LIMIT 50").fetchall()
+            jobs = []
+            for r in rows:
+                j = dict(r)
+                pid = j["pid"]
+                is_alive = psutil.pid_exists(pid) if pid > 0 else False
+                if j["status"] == "RUNNING" and not is_alive:
+                    conn.execute("UPDATE background_jobs SET status = 'STOPPED', stopped_at = ? WHERE id = ?", (datetime.datetime.now().isoformat(), j["id"]))
+                    j["status"] = "STOPPED"
+                j["is_alive"] = is_alive
+                jobs.append(j)
+            conn.commit()
+            return {"ok": True, "jobs_count": len(jobs), "jobs": jobs}
+
+    if not name:
+        return {"ok": False, "error": "job_name is required for action: " + act}
+
+    if act == "start":
+        target_script = script_path.strip()
+        if not target_script:
+            if name.lower() in ("worker", "daemon", "background_worker"):
+                target_script = str(Path(__file__).resolve().parent / "worker.py")
+            else:
+                return {"ok": False, "error": f"script_path must be specified for custom job '{name}'"}
+
+        script_file = Path(target_script).resolve()
+        if not script_file.exists():
+            return {"ok": False, "error": f"Script file not found at: {script_file}"}
+
+        with sqlite3.connect(STATE_DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            existing = conn.execute("SELECT * FROM background_jobs WHERE job_name = ? AND status = 'RUNNING' ORDER BY started_at DESC LIMIT 1", (name,)).fetchone()
+            if existing:
+                old_pid = existing["pid"]
+                if psutil.pid_exists(old_pid):
+                    return {
+                        "ok": True,
+                        "message": f"Job '{name}' is already running with PID {old_pid}",
+                        "job_id": existing["id"],
+                        "job_name": name,
+                        "pid": old_pid,
+                        "status": "RUNNING",
+                    }
+
+        import subprocess
+        creationflags = 0
+        if sys.platform == "win32":
+            creationflags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+
+        proc = subprocess.Popen(
+            [sys.executable, str(script_file)],
+            creationflags=creationflags,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+        )
+
+        job_id = f"job_{int(time.time())}_{proc.pid}"
+        now_str = datetime.datetime.now().isoformat()
+        with sqlite3.connect(STATE_DB_PATH) as conn:
+            conn.execute(
+                "INSERT INTO background_jobs (id, job_name, script_path, pid, status, started_at, stopped_at) VALUES (?, ?, ?, ?, 'RUNNING', ?, NULL)",
+                (job_id, name, str(script_file), proc.pid, now_str),
+            )
+            conn.commit()
+
+        return {
+            "ok": True,
+            "message": f"Background job '{name}' started successfully",
+            "job_id": job_id,
+            "job_name": name,
+            "pid": proc.pid,
+            "status": "RUNNING",
+            "started_at": now_str,
+        }
+
+    elif act == "stop":
+        with sqlite3.connect(STATE_DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute("SELECT * FROM background_jobs WHERE job_name = ? AND status = 'RUNNING' ORDER BY started_at DESC LIMIT 1", (name,)).fetchone()
+            if not row:
+                return {"ok": False, "error": f"No running job found with name '{name}'"}
+
+            pid = row["pid"]
+            job_id = row["id"]
+            stopped_at = datetime.datetime.now().isoformat()
+            if psutil.pid_exists(pid):
+                try:
+                    p = psutil.Process(pid)
+                    p.terminate()
+                    p.wait(timeout=3)
+                except Exception:
+                    try:
+                        p.kill()
+                    except Exception:
+                        pass
+
+            conn.execute("UPDATE background_jobs SET status = 'STOPPED', stopped_at = ? WHERE id = ?", (stopped_at, job_id))
+            conn.commit()
+            return {"ok": True, "message": f"Job '{name}' (PID {pid}) stopped successfully", "job_id": job_id, "stopped_at": stopped_at}
+
+    elif act == "status":
+        with sqlite3.connect(STATE_DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute("SELECT * FROM background_jobs WHERE job_name = ? ORDER BY started_at DESC LIMIT 1", (name,)).fetchone()
+            if not row:
+                return {"ok": False, "error": f"No background job records found for '{name}'"}
+
+            j = dict(row)
+            pid = j["pid"]
+            is_alive = psutil.pid_exists(pid) if pid > 0 else False
+            if j["status"] == "RUNNING" and not is_alive:
+                conn.execute("UPDATE background_jobs SET status = 'STOPPED', stopped_at = ? WHERE id = ?", (datetime.datetime.now().isoformat(), j["id"]))
+                conn.commit()
+                j["status"] = "STOPPED"
+            j["is_alive"] = is_alive
+            return {"ok": True, "job": j}
+
+    return {"ok": False, "error": f"Unsupported action '{action}'. Choose from 'start', 'stop', 'status', 'list'"}
+
+@mcp.tool()
+async def manage_file_workspace(
+    action: str,
+    target_path: str,
+    content: str = "",
+    query: str = "",
+) -> dict[str, Any]:
+    """Safely inspect, read, write, and search workspace files and directories with path-traversal and system-protection guardrails."""
+    act = (action or "").strip().lower()
+    raw_path = (target_path or "").strip()
+    if not act:
+        return {"ok": False, "error": "action is required ('list_dir', 'read_text', 'write_text', 'search_files', 'delete_file')"}
+    if not raw_path:
+        return {"ok": False, "error": "target_path is required"}
+
+    p = Path(raw_path).resolve()
+
+    prohibited_trees = [
+        Path(os.environ.get("SystemRoot", "C:\\Windows")).resolve(),
+        Path("C:\\Program Files").resolve(),
+        Path("C:\\Program Files (x86)").resolve(),
+    ]
+
+    if act in ("write_text", "delete_file"):
+        if p == Path("C:\\").resolve() or str(p).rstrip("\\/") in ("C:", "D:", "E:"):
+            return {
+                "ok": False,
+                "blocked_by_safety_policy": True,
+                "error": "Operation blocked: cannot target root drive directly.",
+            }
+        for pro in prohibited_trees:
+            if p == pro or pro in p.parents:
+                return {
+                    "ok": False,
+                    "blocked_by_safety_policy": True,
+                    "error": f"Write/delete operation blocked: '{p}' is a protected system path.",
+                }
+        if ".git" in p.parts:
+            return {
+                "ok": False,
+                "blocked_by_safety_policy": True,
+                "error": "Direct file modifications inside .git internal structures are restricted.",
+            }
+
+    if act == "list_dir":
+        if not p.exists() or not p.is_dir():
+            return {"ok": False, "error": f"Directory not found: {p}"}
+        items = []
+        for item in sorted(p.iterdir()):
+            try:
+                st = item.stat()
+                items.append({
+                    "name": item.name,
+                    "is_dir": item.is_dir(),
+                    "size_kb": round(st.st_size / 1024.0, 2) if item.is_file() else 0.0,
+                    "modified": datetime.datetime.fromtimestamp(st.st_mtime).isoformat(),
+                })
+            except Exception:
+                continue
+        return {"ok": True, "directory": str(p), "items_count": len(items), "items": items}
+
+    elif act == "read_text":
+        if not p.exists() or not p.is_file():
+            return {"ok": False, "error": f"File not found: {p}"}
+        if p.stat().st_size > 5 * 1024 * 1024:
+            return {"ok": False, "error": f"File exceeds maximum read size limit of 5MB: {p.stat().st_size} bytes"}
+        try:
+            with open(p, "r", encoding="utf-8", errors="replace") as f:
+                data = f.read(50000)
+            return {
+                "ok": True,
+                "file_path": str(p),
+                "file_size_bytes": p.stat().st_size,
+                "is_truncated": len(data) >= 50000,
+                "content": data,
+            }
+        except Exception as exc:
+            return {"ok": False, "error": f"Failed to read file: {exc}"}
+
+    elif act == "write_text":
+        if len(content) > 5 * 1024 * 1024:
+            return {"ok": False, "error": "Content exceeds maximum write size of 5MB"}
+        try:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            with open(p, "w", encoding="utf-8") as f:
+                f.write(content)
+            return {
+                "ok": True,
+                "file_path": str(p),
+                "bytes_written": len(content.encode("utf-8")),
+                "message": f"Successfully wrote file to {p}",
+            }
+        except Exception as exc:
+            return {"ok": False, "error": f"Failed to write file: {exc}"}
+
+    elif act == "search_files":
+        if not p.exists() or not p.is_dir():
+            return {"ok": False, "error": f"Search directory does not exist: {p}"}
+        pattern = query.strip() or "*.*"
+        matches = []
+        count = 0
+        for match in p.rglob(pattern):
+            if count >= 100:
+                break
+            if ".git" in match.parts:
+                continue
+            matches.append({
+                "path": str(match),
+                "name": match.name,
+                "is_dir": match.is_dir(),
+                "size_kb": round(match.stat().st_size / 1024.0, 2) if match.is_file() else 0.0,
+            })
+            count += 1
+        return {"ok": True, "search_root": str(p), "pattern": pattern, "matches_count": len(matches), "matches": matches}
+
+    elif act == "delete_file":
+        if not p.exists():
+            return {"ok": False, "error": f"Target file does not exist: {p}"}
+        if p.is_dir():
+            return {"ok": False, "error": "Recursive directory deletion is blocked for safety. Only single files can be deleted."}
+        try:
+            p.unlink()
+            return {"ok": True, "deleted_path": str(p), "message": "File deleted successfully"}
+        except Exception as exc:
+            return {"ok": False, "error": f"Failed to delete file: {exc}"}
+
+    return {"ok": False, "error": f"Unsupported action '{action}'. Choose from 'list_dir', 'read_text', 'write_text', 'search_files', 'delete_file'"}
+
 # ==============================================================================
 # DEFENSIVE THREAT & URL / VIRUS SHIELD TOOLS
 # ==============================================================================
@@ -2062,6 +2406,82 @@ async def inspect_file_threat(
         "findings": findings,
         "quarantine_recommended": not is_safe,
     }
+
+@mcp.tool()
+async def automate_browser_task(
+    url: str,
+    action: str = "extract_text",
+    selector: str = "",
+) -> dict[str, Any]:
+    """Automate web inspection and content extraction with pre-flight URL safety checks and clean text synthesis."""
+    target_url = (url or "").strip()
+    act = (action or "extract_text").strip().lower()
+    if not target_url:
+        return {"ok": False, "error": "url is required"}
+
+    # 1. Pre-flight threat shield inspection
+    safety_check = await inspect_url_safety(target_url)
+    if not safety_check.get("is_safe", True) or safety_check.get("risk_score", 0) >= 60:
+        return {
+            "ok": False,
+            "blocked_by_threat_shield": True,
+            "error": f"URL '{target_url}' blocked by Threat Shield. Risk score: {safety_check.get('risk_score')}",
+            "threat_findings": safety_check.get("findings", []),
+        }
+
+    # 2. Async HTTP fetch with browser emulation headers
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True, headers=headers) as client:
+            resp = await client.get(target_url)
+
+        if act == "inspect_headers":
+            return {
+                "ok": True,
+                "url": str(resp.url),
+                "status_code": resp.status_code,
+                "headers": dict(resp.headers),
+                "is_redirected": str(resp.url) != target_url,
+            }
+
+        html = resp.text
+        title_match = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
+        page_title = title_match.group(1).strip() if title_match else "No Title"
+
+        meta_match = re.search(r'<meta[^>]*name=["\']description["\'][^>]*content=["\'](.*?)["\']', html, re.IGNORECASE)
+        meta_desc = meta_match.group(1).strip() if meta_match else ""
+
+        clean = re.sub(r"<script[^>]*>.*?</script>", " ", html, flags=re.DOTALL | re.IGNORECASE)
+        clean = re.sub(r"<style[^>]*>.*?</style>", " ", clean, flags=re.DOTALL | re.IGNORECASE)
+        clean = re.sub(r"<[^>]+>", " ", clean)
+        clean = re.sub(r"\s+", " ", clean).strip()
+
+        matched_snippets = []
+        if selector:
+            sel_clean = selector.strip()
+            for line in clean.split(". "):
+                if sel_clean.lower() in line.lower():
+                    matched_snippets.append(line.strip())
+            matched_snippets = matched_snippets[:10]
+
+        return {
+            "ok": True,
+            "url": str(resp.url),
+            "status_code": resp.status_code,
+            "title": page_title,
+            "meta_description": meta_desc,
+            "content_snippet": clean[:3000],
+            "total_chars": len(clean),
+            "matched_snippets": matched_snippets if selector else None,
+            "safety_verified": True,
+        }
+    except Exception as exc:
+        return {"ok": False, "error": f"Browser task failed: {exc}"}
 
 def main() -> None:
     import sys

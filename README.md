@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Architecture-FastMCP%20%7C%20Agentic-00F0FF?style=for-the-badge&logo=fastapi&logoColor=black" alt="FastMCP" />
   <img src="https://img.shields.io/badge/Memory-PostgreSQL%20%2B%20SQLite-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/Security-AST%20Auditing%20%2B%20Threat%20Shield-FF0055?style=for-the-badge&logo=securityscorecard&logoColor=white" alt="Security" />
-  <img src="https://img.shields.io/badge/Tests-25%20Passed%20(100%25)-00FF66?style=for-the-badge&logo=pytest&logoColor=black" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-30%20Passed%20(100%25)-00FF66?style=for-the-badge&logo=pytest&logoColor=black" alt="Tests" />
   <img src="https://img.shields.io/badge/Python-3.10%2B-FFE873?style=for-the-badge&logo=python&logoColor=black" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-999999?style=for-the-badge" alt="License" />
 </p>
@@ -110,6 +110,10 @@ graph TD
 * **Vision Screen Capture (`capture_screen_snapshot`)**: Takes instantaneous primary monitor screenshots (Pillow/MSS) with automated fallback for headless environments, allowing multimodal Vision AI models to visually inspect screen coordinates, open dialogs, and UI elements.
 * **Foreground Window Telemetry (`get_active_window_info`)**: Queries Windows User32 APIs for the active application title, process handle, and bounding rectangle geometry.
 * **Sandboxed System Execution (`execute_system_command`)**: Runs PowerShell and CMD commands with configurable timeouts and strict security filters intercepting destructive commands (`format`, `diskpart`, recursive `del /s /q`).
+* **Live System Telemetry (`inspect_system_telemetry`)**: Monitors real-time CPU %, core counts, RAM availability/utilization, system disk storage, and top memory/CPU-intensive processes via `psutil`.
+* **Detached Daemon Manager (`manage_background_job`)**: Launches, tracks, and stops background worker processes (e.g. `worker.py`) with PID verification and SQLite state persistence.
+* **Workspace File Controller (`manage_file_workspace`)**: Safely reads, writes, searches, and cleans files while strictly guarding system roots (`C:\Windows`, `System32`, `.git`).
+* **Automated Web Browser Operator (`automate_browser_task`)**: Performs web scraping, header inspection, and text extraction reinforced by pre-flight Threat Shield verification.
 
 ---
 
@@ -126,7 +130,7 @@ graph TD
 
 ---
 
-## 🛠️ Complete MCP Tool Matrix (31 Tools)
+## 🛠️ Complete MCP Tool Matrix (35 Tools)
 
 | Category | Tool Name | Description | Auth Required |
 |---|---|---|:---:|
@@ -137,6 +141,10 @@ graph TD
 | **OS Operator & Vision** | `capture_screen_snapshot` | Instantaneous desktop screenshot capture with vision fallback | No |
 | | `get_active_window_info` | Foreground window title, process ID, and coordinate bounds | No |
 | | `execute_system_command` | Sandboxed PowerShell/terminal execution with destructive command guards | No |
+| | `inspect_system_telemetry` | Real-time CPU, RAM, Disk, and top process telemetry | No |
+| | `manage_background_job` | Start, stop, monitor, and list detached background workers in SQLite | No |
+| | `manage_file_workspace` | Safe file read, write, search, and delete with root protection | No |
+| | `automate_browser_task` | Automated web scraping and header inspection with Threat Shield pre-flight | No |
 | **Threat & Malware Shield** | `inspect_url_safety` | Phishing, typosquatting, and executable trap URL pre-flight analyzer | No |
 | | `inspect_file_threat` | Double extension, PE header masquerading, and SHA-256 fingerprinting | No |
 | **Memory Engine** | `search_chat_history` | PostgreSQL full-text search with GIN index ranking | Yes |
@@ -194,7 +202,7 @@ MAX_TEXT_CHARS=12000
 ```bash
 pytest -v
 ```
-All **25 tests** covering AST security, rate limiting, vector validation, SQLite state persistence, scrapers, OS automation, threat shields, and trading indicators run with **100% pass rate**.
+All **30 tests** covering AST security, rate limiting, vector validation, SQLite state persistence, scrapers, OS automation & telemetry, background job management, file workspace safety, threat shields, and trading indicators run with **100% pass rate**.
 
 ### 4. Run Background Daemon
 ```bash
