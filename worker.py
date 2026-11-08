@@ -6,6 +6,11 @@ Compatible with: Windows CMD/PowerShell, Linux VPS, and Termux on Android.
 import asyncio
 import sys
 import time
+from pathlib import Path
+
+_project_dir = str(Path(__file__).resolve().parent)
+if _project_dir not in sys.path:
+    sys.path.insert(0, _project_dir)
 
 try:
     from main import (

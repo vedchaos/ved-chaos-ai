@@ -2033,11 +2033,14 @@ async def manage_background_job(
         if sys.platform == "win32":
             creationflags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
 
+        log_file = script_file.parent / f"{name}.log"
+        log_handle = open(log_file, "a", encoding="utf-8")
         proc = subprocess.Popen(
             [sys.executable, str(script_file)],
+            cwd=str(script_file.parent),
             creationflags=creationflags,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=log_handle,
+            stderr=log_handle,
             stdin=subprocess.DEVNULL,
         )
 
@@ -2530,7 +2533,7 @@ async def run_self_healing_diagnostics(
     try:
         with sqlite3.connect(STATE_DB_PATH) as conn:
             conn.row_factory = sqlite3.Row
-            test_patterns = ["%dev@example.com%", "%support@ved.dev%", "%fastmcp%", "%Extracted email patterns%"]
+            test_patterns = ["%dev@example.com%", "%support@ved.dev%", "%Extracted email patterns%", "%test_dummy_%"]
             clauses = " OR ".join(["summary LIKE ? OR execution_result LIKE ?"] * len(test_patterns))
             params = []
             for p in test_patterns:
