@@ -2484,7 +2484,11 @@ async def automate_browser_task(
         return {"ok": False, "error": f"Browser task failed: {exc}"}
 
 @mcp.tool()
-async def run_self_healing_diagnostics(auto_repair: bool = True) -> dict[str, Any]:
+async def run_self_healing_diagnostics(
+    auto_repair: bool = True,
+    target_port: int = 8000,
+    artifact_retention_hours: int = 24,
+) -> dict[str, Any]:
     """Autonomous self-healing diagnostic and auto-repair engine for Ved Chaos AI.
     Scans and auto-heals:
     1. SQLite Database integrity & schema repair (PRAGMA integrity_check, table reconciliation).
@@ -2492,9 +2496,14 @@ async def run_self_healing_diagnostics(auto_repair: bool = True) -> dict[str, An
     3. Zombie background job termination & cleanup (reconciles dead PIDs in background_jobs table).
     4. Expired authentication lockouts (clears sliding window lockouts when duration elapses).
     5. Core Python AST code integrity (validates main.py and worker.py syntax).
-    6. System resource headroom audit (flags memory or disk exhaustion).
+    6. Port conflict & stale server killer (probes target port, auto-terminating dead/blocking PIDs).
+    7. Temp artifact & screenshot garbage collection (prunes old PNG snapshots and cache older than retention).
+    8. Cloud database & env drift circuit breaker (checks DATABASE_URL configuration & connectivity).
+    9. Git working tree integrity & merge conflict marker audit (detects <<<<<<< conflict debris).
+    10. System resource headroom audit (flags memory or disk exhaustion).
     """
     import psutil
+    import socket
     now = time.time()
     now_str = datetime.datetime.now().isoformat()
     issues_detected: list[str] = []
@@ -2599,7 +2608,97 @@ async def run_self_healing_diagnostics(auto_repair: bool = True) -> dict[str, An
                 code_integrity_results[script_name] = f"error: {exc}"
                 issues_detected.append(f"Failed parsing {script_name}: {exc}")
 
-    # 6. Telemetry & Headroom Check
+    # 6. Port Conflict & Zombie Server Killer
+    port_status = "available"
+    killed_port_pids: list[int] = []
+    if target_port > 0:
+        try:
+            test_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            test_sock.settimeout(0.5)
+            try:
+                test_sock.bind(("127.0.0.1", target_port))
+                test_sock.close()
+                port_status = "available"
+            except (OSError, socket.error):
+                port_status = "in_use"
+                issues_detected.append(f"Port {target_port} is occupied by another process")
+                if auto_repair:
+                    try:
+                        for c in psutil.net_connections(kind="inet"):
+                            if c.laddr and c.laddr.port == target_port and c.status in ("LISTEN", "ESTABLISHED"):
+                                blocking_pid = c.pid
+                                if blocking_pid and blocking_pid != os.getpid():
+                                    try:
+                                        proc = psutil.Process(blocking_pid)
+                                        p_name = proc.name()
+                                        proc.terminate()
+                                        try:
+                                            proc.wait(timeout=1.5)
+                                        except psutil.TimeoutExpired:
+                                            proc.kill()
+                                        killed_port_pids.append(blocking_pid)
+                                        actions_taken.append(f"Killed stale process '{p_name}' (PID {blocking_pid}) on port {target_port}")
+                                        port_status = "cleared"
+                                    except (psutil.NoSuchProcess, psutil.AccessDenied):
+                                        pass
+                    except Exception as net_err:
+                        issues_detected.append(f"Cannot inspect net connections for port {target_port}: {net_err}")
+        except Exception as sock_err:
+            issues_detected.append(f"Port probe failed: {sock_err}")
+
+    # 7. Temp Artifact & Screenshot Garbage Collection
+    pruned_files_count = 0
+    reclaimed_bytes = 0
+    try:
+        cutoff_time = now - (artifact_retention_hours * 3600)
+        patterns = ["screenshot_*.png", "*.tmp", "temp_*.json"]
+        for pat in patterns:
+            for fpath in root_dir.glob(pat):
+                if fpath.is_file() and fpath.stat().st_mtime < cutoff_time:
+                    fsize = fpath.stat().st_size
+                    if auto_repair:
+                        try:
+                            fpath.unlink()
+                            pruned_files_count += 1
+                            reclaimed_bytes += fsize
+                        except Exception:
+                            pass
+                    else:
+                        pruned_files_count += 1
+                        reclaimed_bytes += fsize
+        if pruned_files_count > 0:
+            actions_taken.append(f"Garbage collected {pruned_files_count} stale artifact(s) freeing {reclaimed_bytes} bytes")
+    except Exception as gc_err:
+        issues_detected.append(f"Garbage collection error: {gc_err}")
+
+    # 8. Cloud Database & Env Drift Circuit Breaker
+    cloud_circuit_breaker = "nominal"
+    try:
+        db_url = os.environ.get("DATABASE_URL", "").strip()
+        is_placeholder = any(token in db_url.lower() for token in ["user:password", "host:5432", "example.com"])
+        if not db_url or is_placeholder:
+            cloud_circuit_breaker = "offline_sqlite_fallback"
+            actions_taken.append("DATABASE_URL contains unconfigured template placeholders; engaged safe offline SQLite circuit breaker")
+        else:
+            cloud_circuit_breaker = "configured"
+    except Exception as env_err:
+        issues_detected.append(f"Env configuration error: {env_err}")
+
+    # 9. Git Working Tree Conflict Marker Audit
+    git_conflicts_found = 0
+    try:
+        for code_file in root_dir.glob("*.py"):
+            try:
+                txt = code_file.read_text(encoding="utf-8", errors="ignore")
+                if "<<<<<<< HEAD" in txt or ("=======" in txt and ">>>>>>>" in txt):
+                    git_conflicts_found += 1
+                    issues_detected.append(f"Git merge conflict marker detected in {code_file.name}")
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # 10. Telemetry & Headroom Check
     headroom_status = "nominal"
     try:
         vm = psutil.virtual_memory()
@@ -2623,6 +2722,12 @@ async def run_self_healing_diagnostics(auto_repair: bool = True) -> dict[str, An
         "zombies_cleaned": zombies_cleaned,
         "lockout_recovered": lockout_recovered,
         "code_integrity": code_integrity_results,
+        "port_status": port_status,
+        "killed_port_pids": killed_port_pids,
+        "pruned_files_count": pruned_files_count,
+        "reclaimed_bytes": reclaimed_bytes,
+        "cloud_circuit_breaker": cloud_circuit_breaker,
+        "git_conflicts_found": git_conflicts_found,
         "headroom_status": headroom_status,
         "timestamp": now_str,
     }

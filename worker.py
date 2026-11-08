@@ -71,26 +71,52 @@ async def run_worker_cycle(iteration: int) -> dict[str, any]:
 
 async def run_worker_loop():
     print("=" * 65)
-    print("  VED CHAOS 24/7 FREELANCE DAEMON & LIVE BOUNTY SCANNER")
-    print("  Persistent Engine: SQLite (state.db) | Hybrid Live APIs")
+    print("  VED CHAOS 24/7 FREELANCE DAEMON & CRASH-RESILIENT SUPERVISOR")
+    print("  Persistent Engine: SQLite (state.db) | Autonomous Watchdog")
     print("  Compatible with: Windows PC, Termux on Android, Linux VPS")
     print("=" * 65)
 
     run_once = "--once" in sys.argv
     iteration = 0
-    try:
-        while True:
-            iteration += 1
-            await run_worker_cycle(iteration)
+    consecutive_crashes = 0
+    MAX_CONSECUTIVE_CRASHES = 10
+    BASE_BACKOFF_SECONDS = 3.0
 
-            if run_once:
-                print("\n[Worker] Single execution cycle complete (--once mode).")
+    while True:
+        try:
+            while True:
+                iteration += 1
+                await run_worker_cycle(iteration)
+                consecutive_crashes = 0
+
+                if run_once:
+                    print("\n[Worker] Single execution cycle complete (--once mode).")
+                    return
+
+                print(f"\nSleeping for {POLL_INTERVAL_SECONDS} seconds... (Press Ctrl+C to stop)")
+                await asyncio.sleep(POLL_INTERVAL_SECONDS)
+
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            print("\n[Worker] Gracefully shut down by operator.")
+            break
+        except Exception as exc:
+            consecutive_crashes += 1
+            backoff = min(60.0, BASE_BACKOFF_SECONDS * (2 ** (consecutive_crashes - 1)))
+            print(f"\n⚠️  [Crash Detected] Daemon cycle crashed: {exc}")
+            print(f"🔄  [Crash Resurrection] Auto-healing & respawning in {backoff:.1f}s (Attempt {consecutive_crashes}/{MAX_CONSECUTIVE_CRASHES})...")
+
+            try:
+                heal = await run_self_healing_diagnostics(auto_repair=True)
+                if heal.get("actions_taken"):
+                    print(f"    - Repaired during recovery: {', '.join(heal['actions_taken'])}")
+            except Exception as heal_err:
+                print(f"    - Self-healing during crash recovery skipped: {heal_err}")
+
+            if consecutive_crashes >= MAX_CONSECUTIVE_CRASHES:
+                print(f"\n❌ [Supervisor] Max consecutive crash limit ({MAX_CONSECUTIVE_CRASHES}) reached. Stopping to protect system.")
                 break
 
-            print(f"\nSleeping for {POLL_INTERVAL_SECONDS} seconds... (Press Ctrl+C to stop)")
-            await asyncio.sleep(POLL_INTERVAL_SECONDS)
-    except KeyboardInterrupt:
-        print("\n[Worker] Gracefully shut down by operator.")
+            await asyncio.sleep(backoff)
 
 if __name__ == "__main__":
     asyncio.run(run_worker_loop())

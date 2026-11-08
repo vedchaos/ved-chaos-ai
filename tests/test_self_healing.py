@@ -87,3 +87,29 @@ def test_self_healing_lockout_flush():
     assert report["lockout_recovered"] is True
     assert main._lockout_until == 0.0
     assert main._failed_attempts == 0
+
+def test_self_healing_temp_artifacts_gc():
+    root_dir = Path(main.__file__).resolve().parent
+    old_screenshot = root_dir / "screenshot_test_old_temp.png"
+    old_screenshot.write_text("dummy image bytes", encoding="utf-8")
+    past_time = time.time() - (48 * 3600)
+    os.utime(old_screenshot, (past_time, past_time))
+
+    try:
+        report = asyncio.run(run_self_healing_diagnostics(auto_repair=True, artifact_retention_hours=24))
+        assert report["ok"] is True
+        assert report["pruned_files_count"] >= 1
+        assert not old_screenshot.exists()
+    finally:
+        if old_screenshot.exists():
+            old_screenshot.unlink()
+
+def test_self_healing_cloud_circuit_breaker():
+    report = asyncio.run(run_self_healing_diagnostics(auto_repair=True))
+    assert report["ok"] is True
+    assert report["cloud_circuit_breaker"] in ("offline_sqlite_fallback", "configured")
+
+def test_self_healing_port_probe():
+    report = asyncio.run(run_self_healing_diagnostics(auto_repair=True, target_port=59123))
+    assert report["ok"] is True
+    assert report["port_status"] in ("available", "cleared", "in_use")
