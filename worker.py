@@ -12,6 +12,7 @@ try:
         get_earning_dashboard,
         scan_direct_bounties,
         process_micro_task,
+        run_self_healing_diagnostics,
     )
 except ImportError:
     print("[Error] Make sure to run this script from the project root directory.")
@@ -41,7 +42,19 @@ async def run_worker_cycle(iteration: int) -> dict[str, any]:
         src = b.get("source", "Direct")
         print(f"  - [{src}] ${budget:.0f} USD: {title}...")
 
-    # 3. Check celebration milestone
+    # 3. Autonomous self-healing diagnostic & repair
+    try:
+        heal_report = await run_self_healing_diagnostics(auto_repair=True)
+        if heal_report.get("actions_taken"):
+            print(f"  🔧 Auto-Heal Watchdog: {len(heal_report['actions_taken'])} issue(s) resolved automatically:")
+            for act in heal_report["actions_taken"]:
+                print(f"     -> {act}")
+        else:
+            print("  🛡️ System Health & Integrity: Nominal (No anomalies detected)")
+    except Exception as heal_err:
+        print(f"  [Warning] Self-healing cycle skipped: {heal_err}")
+
+    # 4. Check celebration milestone
     if dash["target_achieved"]:
         print("\n" + "*" * 55)
         print("  🎉 DAILY TARGET REACHED! CELEBRATION ACTIVE! 🎉")
