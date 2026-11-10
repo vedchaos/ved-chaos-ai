@@ -14,6 +14,8 @@
   <img src="https://img.shields.io/badge/License-MIT-999999?style=for-the-badge" alt="License" />
 </p>
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/vedchaos-ved-chaos-ai-7ut3zs?v=9e954589e27c10e9928c15fb71c05425)](https://m8ven.ai/mcp/vedchaos-ved-chaos-ai-7ut3zs?s=readme)
+
 ---
 
 **A stateful, rigorously tested FastMCP developer server built for persistent AI agents (Antigravity IDE, Claude Desktop, Cursor, Windsurf).**  
