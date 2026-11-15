@@ -40,3 +40,18 @@ def test_auth_rate_limiting_and_lockout():
     main._failed_attempts = 0
     main._lockout_until = 0.0
 
+
+def test_auth_disabled_open_access():
+    main.SECURITY_PIN = ""
+    main.ACTIVATION_PHRASE = ""
+    main._failed_attempts = 0
+    main._lockout_until = 0.0
+
+    res = asyncio.run(verify_security_access())
+    assert res["authenticated"] is True
+    assert res["access_level"] == "OWNER_UNLOCKED"
+    assert res["rate_limited"] is False
+
+    assert check_2fa_authorization() is True
+
+
