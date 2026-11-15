@@ -1,6 +1,6 @@
 [project]
 name = "ved-chaos-ai"
-version = "0.3.0"
+version = "0.4.0"
 description = "Stateful FastMCP developer suite: hybrid memory, live job scrapers, AST security auditing, OS operator, and threat shield"
 requires-python = ">=3.11"
 dependencies = [

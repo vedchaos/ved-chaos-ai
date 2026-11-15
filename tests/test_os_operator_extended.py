@@ -63,7 +63,10 @@ async def test_manage_file_workspace_lifecycle_and_safety():
         assert blocked_res.get("blocked_by_safety_policy") is True
 
 @pytest.mark.anyio
-async def test_manage_background_job_lifecycle():
+async def test_manage_background_job_lifecycle(tmp_path):
+    import main
+    orig_path = main.STATE_DB_PATH
+    main.STATE_DB_PATH = tmp_path / "test_bg_jobs.db"
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
         f.write("import time\ntime.sleep(20)\n")
         f.flush()
@@ -99,6 +102,7 @@ async def test_manage_background_job_lifecycle():
         assert status_after["ok"] is True
         assert status_after["job"]["status"] == "STOPPED"
     finally:
+        main.STATE_DB_PATH = orig_path
         if os.path.exists(dummy_script):
             os.remove(dummy_script)
 

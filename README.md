@@ -9,10 +9,12 @@
   <img src="https://img.shields.io/badge/Architecture-FastMCP%20%7C%20Agentic-00F0FF?style=for-the-badge&logo=fastapi&logoColor=black" alt="FastMCP" />
   <img src="https://img.shields.io/badge/Memory-PostgreSQL%20%2B%20SQLite-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/Security-AST%20Auditing%20%2B%20Threat%20Shield-FF0055?style=for-the-badge&logo=securityscorecard&logoColor=white" alt="Security" />
-  <img src="https://img.shields.io/badge/Tests-37%20Passed%20(100%25)-00FF66?style=for-the-badge&logo=pytest&logoColor=black" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-42%20Passed%20(100%25)-00FF66?style=for-the-badge&logo=pytest&logoColor=black" alt="Tests" />
   <img src="https://img.shields.io/badge/Python-3.10%2B-FFE873?style=for-the-badge&logo=python&logoColor=black" alt="Python" />
   <img src="https://img.shields.io/badge/License-MIT-999999?style=for-the-badge" alt="License" />
 </p>
+
+[![M8ven Score](https://m8ven.ai/badge/mcp/vedchaos-ved-chaos-ai-7ut3zs?v=de429bf8dd623c497bc56f27125dfc17)](https://m8ven.ai/mcp/vedchaos-ved-chaos-ai-7ut3zs?s=readme)
 
 ---
 
@@ -130,7 +132,7 @@ graph TD
 
 ---
 
-## 🛠️ Complete MCP Tool Matrix (35 Tools)
+## 🛠️ Complete MCP Tool Matrix (41 Tools)
 
 | Category | Tool Name | Description | Auth Required |
 |---|---|---|:---:|
@@ -169,6 +171,12 @@ graph TD
 | | `calculate_position_risk_management` | Exact position sizing enforcing strict 1% equity risk rule | No |
 | | `execute_paper_trade` | Simulated zero-risk paper portfolio execution | No |
 | | `craft_brilliant_prompt` | Professional prompt engineering for coding and creative synthesis | No |
+| **Self-Healing** | `run_self_healing_diagnostics` | Autonomous SQLite integrity, zombie cleanup, port killer, AST check & GC | No |
+| **Ved Chaos Intelligence (v0.4.0)** | `ved_ingest_codebase` | **Ved Chaos Codebase Ingestor**: Local & GitHub repo digest + secret redaction | No |
+| | `ved_scan_supply_chain` | **Ved Chaos Supply-Chain Shield**: Live OSV.dev CVEs + Shannon entropy secrets | No |
+| | `ved_manage_reasoning_chain` | **Ved Chaos Thought Chain**: Persistent SQLite sequential reasoning & branching | No |
+| | `ved_scout_github_upgrades` | **Ved Chaos GitHub Radar**: Live repo discovery & permissive license fit | No |
+| | `ved_get_capabilities_manifest` | Live version, active memory backend (PostgreSQL or SQLite FTS5), and tool manifest | No |
 
 ---
 
@@ -202,7 +210,7 @@ MAX_TEXT_CHARS=12000
 ```bash
 pytest -v
 ```
-All **30 tests** covering AST security, rate limiting, vector validation, SQLite state persistence, scrapers, OS automation & telemetry, background job management, file workspace safety, threat shields, and trading indicators run with **100% pass rate**.
+All **42 tests** covering AST security, rate limiting, vector validation, SQLite FTS5 hybrid memory, state persistence, scrapers, OS automation & telemetry, background job management, self-healing, codebase ingestion, supply-chain OSV auditing, reasoning chains, GitHub radar, threat shields, and trading indicators run with **100% pass rate**.
 
 ### 4. Run Background Daemon
 ```bash
